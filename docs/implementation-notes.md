@@ -8,7 +8,8 @@
 
 ## Actual checks
 - Storage tests: `npm test` passed 4/4 (vault required, persistent creation/event fields, unavailable-vault retry without duplication, invalid input rejection).
-- Launched `npm start` with an isolated app-data directory; Chrome DevTools protocol observed the actual Electron page. Initial page displayed a disabled Add button without a vault. With an isolated vault preselected in state, a UI form submission produced one task in `state.json`, one `.md` event, and the task in the visible list. Screenshot inspected; layout is readable.
+- Launched `npm start` with an isolated app-data directory; Chrome DevTools protocol observed the actual Electron page. Initial page displayed a disabled Add button without a vault. With an isolated vault preselected in state, a UI form submission produced one task in `state.json`, one `.md` event, and the task in the visible list. Reloading the renderer restored the saved task. Screenshot inspected; layout is readable.
+- Fresh local Git clone: `npm ci`, `npm test` (4/4), and `npm audit --audit-level=high` (0 vulnerabilities) passed. This checks installation and storage tests from committed files; a second clone window was not launched.
 - `npm audit --audit-level=high` found 0 vulnerabilities after upgrading from Electron 38 to 44.4.5. Original Electron 38 install reported two high vulnerabilities; changed the version based on audit's suggested patched release and re-ran tests.
 - Native folder picker click-through was **not** exercised: macOS Accessibility/Screen Recording permission for desktop automation was pending. Storage selection/validation was tested, but native dialog use should be manually checked.
 
