@@ -296,6 +296,19 @@ function renderFocus(state, updateTasks = false) {
   }
   if (focusTask.value !== previousTask || !previousFocus || !previousBreak) applySelection();
   const session = state.activeSession;
+  const reminder = document.querySelector('#break-reminder');
+  const reminderText = document.querySelector('#break-reminder-text');
+  let breakReminder = '';
+  if (state.breakOffer && !state.activeBreak) {
+    breakReminder = `Focus complete. Your ${state.breakOffer.minutes}-minute break is ready when you are.`;
+  } else if (session?.status === 'running') {
+    const elapsed = Math.max(0, Date.now() - session.segmentStartedAt);
+    const remaining = session.plannedMs - session.activeMs - elapsed;
+    const threshold = Math.min(60_000, Math.max(10_000, session.plannedMs / 10));
+    if (remaining > 0 && remaining <= threshold) breakReminder = 'Your break is coming soon.';
+  }
+  reminder.hidden = !breakReminder;
+  if (reminderText.textContent !== breakReminder) reminderText.textContent = breakReminder;
   document.querySelector('#focus-setup').hidden = !!session;
   document.querySelector('#focus-active').hidden = !session;
   updateStartAvailability();
