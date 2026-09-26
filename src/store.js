@@ -2,6 +2,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { randomUUID } = require('node:crypto');
+const COLOURS = ['sage', 'blue', 'peach', 'lavender'];
 
 function createStore(dataFile) {
   let state = fs.existsSync(dataFile)
@@ -61,10 +62,7 @@ function createStore(dataFile) {
     return getState();
   }
 
-  function createTask(title) {
-    if (!state.vaultPath) throw new Error('Select an Obsidian vault first.');
-    if (typeof title !== 'string' || !title.trim()) throw new Error('Enter a task title.');
-    const task = { id: randomUUID(), title: title.trim().replace(/\s+/g, ' '), status: 'open' };
+  function eventFor(task, type, previous) {
     const now = new Date();
     const date = new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
     const time = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }).format(now);
@@ -73,15 +71,86 @@ function createStore(dataFile) {
     const sign = offset >= 0 ? '+' : '-';
     const numericOffset = `${sign}${String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0')}:${String(Math.abs(offset) % 60).padStart(2, '0')}`;
     const id = randomUUID();
-    const markdown = `# FocusDesk task event\n\n- Event ID: ${id}\n- Date: ${date}\n- Time: ${time}\n- Timezone: ${timezone} (UTC${numericOffset})\n- Event type: task-created\n- Status: open\n- Task ID: ${task.id}\n- Title: ${task.title}\n`;
-    state.tasks.push(task);
+    const before = previous ? `- Previous title: ${previous.title}\n- Previous colour: ${previous.colour || 'sage'}\n` : '';
+    const markdown = `# FocusDesk task event\n\n- Event ID: ${id}\n- Date: ${date}\n- Time: ${time}\n- Timezone: ${timezone} (UTC${numericOffset})\n- Event type: ${type}\n- Status: ${task.status}\n- Task ID: ${task.id}\n${before}- Title: ${task.title}\n- Colour: ${task.colour || 'sage'}\n`;
     state.pendingEvents.push({ id, vaultPath: state.vaultPath, markdown });
     save(); // Task and its pending log become durable together, before attempting vault I/O.
     retryPending();
-    return task;
   }
 
-  return { getState, selectVault, createTask, retryPending };
+  function validTitle(title) {
+    if (typeof title !== 'string' || !title.trim()) throw new Error('Enter a task title.');
+    const cleaned = title.trim().replace(/\s+/g, ' ');
+    if (cleaned.length > 200) throw new Error('Task title must be 200 characters or fewer.');
+    return cleaned;
+  }
+
+  function change(operation) {
+    const before = getState();
+    try {
+      return operation();
+    } catch (error) {
+      // If the local JSON write fails, don't leave an uncommitted task/event in memory.
+      state = before;
+      throw error;
+    }
+  }
+
+  function createTask(title) {
+    if (!state.vaultPath) throw new Error('Select an Obsidian vault first.');
+    const cleaned = validTitle(title);
+    return change(() => {
+      const task = { id: randomUUID(), title: cleaned, colour: 'sage', status: 'open' };
+      state.tasks.push(task);
+      eventFor(task, 'task-created');
+      return task;
+    });
+  }
+
+  function editTask(id, title, colour) {
+    const task = state.tasks.find(item => item.id === id);
+    if (!task) throw new Error('Task not found.');
+    const nextTitle = validTitle(title);
+    if (!COLOURS.includes(colour)) throw new Error('Choose a valid task colour.');
+    if (task.title === nextTitle && (task.colour || 'sage') === colour) return structuredClone(task);
+    const previous = { ...task };
+    return change(() => {
+      task.title = nextTitle;
+      task.colour = colour;
+      eventFor(task, 'task-edited', previous);
+      return structuredClone(task);
+    });
+  }
+
+  function setTaskStatus(id, from, to, type) {
+    const task = state.tasks.find(item => item.id === id);
+    if (!task) throw new Error('Task not found.');
+    if (task.status !== from) throw new Error(`Task is already ${to}.`);
+    return change(() => {
+      task.status = to;
+      eventFor(task, type);
+      return structuredClone(task);
+    });
+  }
+
+  function completeTask(id) {
+    return setTaskStatus(id, 'open', 'completed', 'task-completed');
+  }
+
+  function reopenTask(id) {
+    return setTaskStatus(id, 'completed', 'open', 'task-reopened');
+  }
+
+  function deleteTask(id) {
+    const index = state.tasks.findIndex(item => item.id === id);
+    if (index < 0) throw new Error('Task not found.');
+    change(() => {
+      const [task] = state.tasks.splice(index, 1);
+      eventFor({ ...task, status: 'deleted' }, 'task-deleted');
+    });
+  }
+
+  return { getState, selectVault, createTask, editTask, completeTask, reopenTask, deleteTask, retryPending };
 }
 
 module.exports = { createStore };
