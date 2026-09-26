@@ -35,3 +35,16 @@ li.empty { color: #738078; border-style: dashed; }
 .edit-form label { margin: 0; flex: 1 1 180px; font-size: 14px; }
 .edit-form input, .edit-form select { display: block; width: 100%; margin-top: 4px; padding: 7px; border: 1px solid #bbc9c1; border-radius: 8px; font: inherit; }
 .footnote { font-size: 13px; color: #66736d; }
+#focus h3 { margin: 26px 0 8px; font-size: 17px; }
+.focus-settings { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; padding-bottom: 18px; border-bottom: 1px solid #e1e8e3; }
+.focus-settings label { margin: 0; flex: 1 1 200px; }
+.focus-settings input { flex: 0 0 85px; }
+#focus-setup select, #focus-setup input { display: block; width: 100%; padding: 10px; border: 1px solid #bbc9c1; border-radius: 9px; font: inherit; }
+#focus-setup button { margin-top: 14px; }
+#focus-label { font-weight: 700; margin: 16px 0 0; overflow-wrap: anywhere; }
+#focus-clock { font-size: clamp(48px, 10vw, 80px); font-weight: 700; letter-spacing: -.05em; margin: 0; font-variant-numeric: tabular-nums; }
+#focus-status { color: #52616c; margin: 0 0 15px; }
+.focus-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+#focus-stop { background: #74544c; }
+#focus-message { min-height: 1.4em; color: #435b69; }
+#focus-history li { overflow-wrap: anywhere; }

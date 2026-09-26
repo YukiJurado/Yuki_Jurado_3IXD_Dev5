@@ -4,10 +4,19 @@ const path = require('node:path');
 const { randomUUID } = require('node:crypto');
 const COLOURS = ['sage', 'blue', 'peach', 'lavender'];
 
-function createStore(dataFile) {
+function createStore(dataFile, { now = Date.now } = {}) {
   let state = fs.existsSync(dataFile)
     ? JSON.parse(fs.readFileSync(dataFile, 'utf8'))
     : { vaultPath: null, tasks: [], pendingEvents: [] };
+  state.focusMinutes ??= 25;
+  state.sessions ??= [];
+  state.activeSession ??= null;
+  // After a crash, the last saved active checkpoint is trusted; time while closed is not.
+  if (state.activeSession && ['running', 'paused'].includes(state.activeSession.status)) {
+    state.activeSession.status = 'interrupted';
+    state.activeSession.segmentStartedAt = null;
+    save();
+  }
 
   function save() {
     fs.mkdirSync(path.dirname(dataFile), { recursive: true });
@@ -31,6 +40,7 @@ function createStore(dataFile) {
 
   function selectVault(folder) {
     if (state.pendingEvents.length) throw new Error('Retry pending events for the original vault before switching.');
+    if (state.activeSession) throw new Error('Finish or cancel the active focus session before switching vaults.');
     if (typeof folder !== 'string' || !path.isAbsolute(folder) || !isVault(folder)) {
       throw new Error('Select an existing Obsidian vault folder (containing .obsidian).');
     }
@@ -44,7 +54,7 @@ function createStore(dataFile) {
       try {
         // Never recreate a missing vault at its old location.
         if (!isVault(event.vaultPath)) throw new Error('Vault unavailable');
-        const dir = path.join(event.vaultPath, 'FocusDesk', 'tasks');
+        const dir = path.join(event.vaultPath, 'FocusDesk', event.kind || 'tasks');
         fs.mkdirSync(dir, { recursive: true });
         const filename = path.join(dir, `${event.id}.md`);
         try {
@@ -62,20 +72,24 @@ function createStore(dataFile) {
     return getState();
   }
 
-  function eventFor(task, type, previous) {
-    const now = new Date();
-    const date = new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
-    const time = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }).format(now);
+  function recordEvent(kind, type, status, details, vaultPath = state.vaultPath) {
+    const instant = new Date(now());
+    const date = new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(instant);
+    const time = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }).format(instant);
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const offset = -now.getTimezoneOffset();
+    const offset = -instant.getTimezoneOffset();
     const sign = offset >= 0 ? '+' : '-';
     const numericOffset = `${sign}${String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0')}:${String(Math.abs(offset) % 60).padStart(2, '0')}`;
     const id = randomUUID();
-    const before = previous ? `- Previous title: ${previous.title}\n- Previous colour: ${previous.colour || 'sage'}\n` : '';
-    const markdown = `# FocusDesk task event\n\n- Event ID: ${id}\n- Date: ${date}\n- Time: ${time}\n- Timezone: ${timezone} (UTC${numericOffset})\n- Event type: ${type}\n- Status: ${task.status}\n- Task ID: ${task.id}\n${before}- Title: ${task.title}\n- Colour: ${task.colour || 'sage'}\n`;
-    state.pendingEvents.push({ id, vaultPath: state.vaultPath, markdown });
+    const markdown = `# FocusDesk ${kind === 'focus' ? 'focus' : 'task'} event\n\n- Event ID: ${id}\n- Date: ${date}\n- Time: ${time}\n- Timezone: ${timezone} (UTC${numericOffset})\n- Event type: ${type}\n- Status: ${status}\n${details}`;
+    state.pendingEvents.push({ id, kind, vaultPath, markdown });
     save(); // Task and its pending log become durable together, before attempting vault I/O.
     retryPending();
+  }
+
+  function eventFor(task, type, previous) {
+    const before = previous ? `- Previous title: ${previous.title}\n- Previous colour: ${previous.colour || 'sage'}\n` : '';
+    recordEvent('tasks', type, task.status, `- Task ID: ${task.id}\n${before}- Title: ${task.title}\n- Colour: ${task.colour || 'sage'}\n`);
   }
 
   function validTitle(title) {
@@ -150,7 +164,138 @@ function createStore(dataFile) {
     });
   }
 
-  return { getState, selectVault, createTask, editTask, completeTask, reopenTask, deleteTask, retryPending };
+  function focusDetails(session, actual = null) {
+    const link = session.taskId
+      ? `- Task ID: ${session.taskId}\n- Task title: ${session.taskTitle}\n`
+      : `- Activity: ${session.description}\n`;
+    return `- Session ID: ${session.id}\n${link}- Planned minutes: ${session.plannedMs / 60_000}\n${actual === null ? '' : `- Actual active duration: ${actual} ms\n`}`;
+  }
+
+  function startFocus({ taskId = null, description = '' } = {}) {
+    if (!state.vaultPath) throw new Error('Select an Obsidian vault first.');
+    if (state.activeSession) throw new Error('A focus session is already active.');
+    if (taskId && description.trim()) throw new Error('Select either a task or a description.');
+    if (!taskId && (typeof description !== 'string' || !description.trim())) throw new Error('Select a task or description.');
+    const task = taskId && state.tasks.find(item => item.id === taskId);
+    if (taskId && !task) throw new Error('Task not found.');
+    const activity = task ? null : validTitle(description);
+    return change(() => {
+      const session = {
+        id: randomUUID(), taskId: task ? task.id : null, taskTitle: task ? task.title : null,
+        description: activity, vaultPath: state.vaultPath, status: 'running',
+        startedAt: new Date(now()).toISOString(), activeMs: 0, segmentStartedAt: now(),
+        plannedMs: state.focusMinutes * 60_000, extended: false
+      };
+      state.activeSession = session;
+      recordEvent('focus', 'focus-start', 'running', focusDetails(session), session.vaultPath);
+      return structuredClone(session);
+    });
+  }
+
+  function stopFocus() {
+    if (!state.activeSession) throw new Error('No active focus session.');
+    if (state.activeSession.status === 'running') {
+      tick();
+      if (!state.activeSession) throw new Error('Focus session already completed at zero.');
+    }
+    return change(() => {
+      const session = state.activeSession;
+      if (session.status === 'running') session.activeMs += Math.min(session.plannedMs - session.activeMs, Math.max(0, now() - session.segmentStartedAt));
+      state.activeSession = null;
+      recordEvent('focus', 'focus-cancelled', 'cancelled', focusDetails(session, Math.round(session.activeMs)), session.vaultPath);
+    });
+  }
+
+  function activeFocus() {
+    if (!state.activeSession) throw new Error('No active focus session.');
+    return state.activeSession;
+  }
+
+  function accrue(session) {
+    if (session.status !== 'running') return;
+    const current = now();
+    session.activeMs = Math.min(session.plannedMs, session.activeMs + Math.max(0, current - session.segmentStartedAt));
+    session.segmentStartedAt = current;
+  }
+
+  function pauseFocus() {
+    if (activeFocus().status !== 'running') throw new Error('Focus is not running.');
+    return change(() => {
+      accrue(state.activeSession);
+      state.activeSession.status = 'paused';
+      save();
+      return getState().activeSession;
+    });
+  }
+
+  function resumeFocus() {
+    if (!['paused', 'interrupted'].includes(activeFocus().status)) throw new Error('Focus is not paused or interrupted.');
+    return change(() => {
+      state.activeSession.status = 'running';
+      state.activeSession.segmentStartedAt = now();
+      save();
+      return getState().activeSession;
+    });
+  }
+
+  function finishFocus() {
+    if (activeFocus().status === 'interrupted') throw new Error('Resume or cancel the interrupted session first.');
+    return change(() => {
+      const session = state.activeSession;
+      accrue(session);
+      const finished = { ...session, status: 'completed', actualMs: Math.round(session.activeMs), completedAt: new Date(now()).toISOString() };
+      delete finished.segmentStartedAt;
+      state.sessions.push(finished);
+      state.activeSession = null;
+      recordEvent('focus', 'focus-completed', 'completed', focusDetails(finished, finished.actualMs), finished.vaultPath);
+      return structuredClone(finished);
+    });
+  }
+
+  function tick() {
+    if (state.activeSession?.status !== 'running') return getState();
+    change(() => {
+      accrue(state.activeSession);
+      save();
+    });
+    if (state.activeSession.activeMs >= state.activeSession.plannedMs) finishFocus();
+    return getState();
+  }
+
+  function interruptFocus() {
+    if (!state.activeSession || state.activeSession.status === 'interrupted') return getState();
+    return change(() => {
+      accrue(state.activeSession);
+      state.activeSession.status = 'interrupted';
+      state.activeSession.segmentStartedAt = null;
+      save();
+      return getState();
+    });
+  }
+
+  function setFocusMinutes(minutes) {
+    if (!Number.isInteger(minutes) || minutes < 1 || minutes > 180) throw new Error('Focus length must be 1 to 180 whole minutes.');
+    return change(() => {
+      state.focusMinutes = minutes;
+      save();
+      return minutes;
+    });
+  }
+
+  function extendFocus() {
+    activeFocus();
+    tick();
+    if (!state.activeSession) throw new Error('Focus session already completed.');
+    if (state.activeSession.extended) throw new Error('Focus session already extended.');
+    return change(() => {
+      state.activeSession.plannedMs += 5 * 60_000;
+      state.activeSession.extended = true;
+      save();
+      return getState().activeSession;
+    });
+  }
+
+  return { getState, selectVault, createTask, editTask, completeTask, reopenTask, deleteTask, retryPending, startFocus, stopFocus, pauseFocus, resumeFocus, finishFocus, tick, interruptFocus, setFocusMinutes, extendFocus };
 }
 
 module.exports = { createStore };

@@ -23,6 +23,16 @@ app.whenReady().then(() => {
   ipcMain.handle('task:reopen', (_event, id) => store.reopenTask(id));
   ipcMain.handle('task:delete', (_event, id) => store.deleteTask(id));
   ipcMain.handle('events:retry', () => store.retryPending());
+  ipcMain.handle('focus:settings', (_event, minutes) => store.setFocusMinutes(minutes));
+  ipcMain.handle('focus:start', (_event, selection) => store.startFocus(selection));
+  ipcMain.handle('focus:pause', () => store.pauseFocus());
+  ipcMain.handle('focus:resume', () => store.resumeFocus());
+  ipcMain.handle('focus:stop', () => store.stopFocus());
+  ipcMain.handle('focus:finish', () => store.finishFocus());
+  ipcMain.handle('focus:extend', () => store.extendFocus());
+  setInterval(() => {
+    try { store.tick(); } catch (error) { console.error('Focus checkpoint failed:', error); }
+  }, 1000);
 
   function openWindow() {
     const window = new BrowserWindow({
@@ -35,6 +45,12 @@ app.whenReady().then(() => {
       }
     });
     window.loadFile(path.join(__dirname, 'index.html'));
+    window.on('close', event => {
+      try { store.interruptFocus(); } catch (error) {
+        event.preventDefault();
+        dialog.showErrorBox('Could not save focus session', error.message);
+      }
+    });
   }
   openWindow();
   app.on('activate', () => {

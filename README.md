@@ -1,29 +1,35 @@
-# FocusDesk — task lifecycle milestone
+# FocusDesk — tasks and focus sessions
 
-An offline Electron desktop app for student tasks and focus work. **Current stage:** select an Obsidian vault; create/view/edit title and colour/complete/reopen/delete tasks; save locally and append one Markdown event per action. **Focus timer, breaks, sessions and report are not built yet.** See [PRD](docs/PRD.md) for the full assignment scope.
+An offline Electron desktop app for student tasks and focus work. **Current stage:** task lifecycle and focus sessions, with local persistence and append-only Markdown events in a selected Obsidian vault. **Breaks and the day/week/month chart are not built yet.** See [PRD](docs/PRD.md) for the full scope.
 
 ## Run in VS Code
 
 1. Install Node.js and npm. Open this repository folder in VS Code (**File → Open Folder**).
-2. Open **Terminal → New Terminal**. Run `npm ci` to install Electron (requires internet the first time; running afterward needs no internet).
-3. Run `npm start`. The FocusDesk window opens. Stop with Ctrl+C in the terminal (on macOS, closing the window may leave the app running; use **Electron → Quit Electron** or Ctrl+C).
-4. Click **Choose vault folder** and select the **root of an existing Obsidian vault**—the folder containing `.obsidian`. If you have none, create one in Obsidian first. Events are written under `<vault>/FocusDesk/tasks/`; existing notes are not modified.
-5. Add a titled task. Its default colour is Sage. Each card has **Edit** (title and Sage/Blue/Peach/Lavender colour), **Complete** or **Reopen**, and **Delete** (asks for confirmation). Deleted tasks disappear from the list, but their vault events remain.
+2. Open **Terminal → New Terminal**. Run `npm ci` to install Electron (internet required for the first install; using the installed app afterward is offline).
+3. Run `npm start`. Stop with Ctrl+C in the terminal. On macOS, closing the window can leave Electron running; use its Quit menu or Ctrl+C.
+4. Click **Choose vault folder** and select the **root of an existing Obsidian vault** (the folder containing `.obsidian`). If needed, create one in Obsidian first. FocusDesk writes new files under `<vault>/FocusDesk/tasks/` and `<vault>/FocusDesk/focus/`; it does not rewrite older event files.
 
-Run `npm test` for storage tests. The app requires no account or cloud service while running.
+`npm test` runs the automated storage/timing checks. No account or cloud service is needed while running.
+
+## Use the app
+
+- **Tasks:** Add a title (default Sage colour). Each task card has **Focus**, **Edit** (title/colour), **Complete/Reopen**, and **Delete** (with confirmation). Focus completion does **not** complete its task.
+- **Focus:** Set a focus length from 1 to 180 whole minutes (default 25) and click **Save length**. Choose a task *or* type a short activity description; Start remains disabled without either. The task card's **Focus** button selects it for you. **Pause** stops counting time; **Resume** continues. **+5 minutes** is available once per session. **Finish early** saves measured active time; reaching zero does the same automatically. **Stop / Cancel** asks for confirmation and does not add partial time to completed-session history.
+- **Close and reopen:** A running or paused session becomes **Interrupted**. On reopening, choose **Resume** or **Cancel interrupted session**; time while the app was closed is not counted. After an unexpected crash, up to roughly one second of recent active time may be lost because the app checkpoints once per second. It never silently completes a recovered session.
+- **History:** Completed focus sessions are listed below the timer with actual active seconds and local completion time. They survive restart. Cancelled sessions are not in this list. Task titles are snapshotted when focus starts, so editing or deleting a task does not relabel earlier sessions.
 
 ## Short manual test
 
-1. Choose your vault; add `Read chapter 3`. Edit it to `Read chapter 4`, choose Blue, and save. Check the new title and coloured edge.
-2. Click **Complete**: the card should say Completed and show “Task complete!” Click **Reopen**: it should say Open. Click **Delete** and confirm: the card should disappear.
-3. Inspect `<vault>/FocusDesk/tasks/`: expect **five different `.md` files**, one each for `task-created`, `task-edited`, `task-completed`, `task-reopened`, `task-deleted`. Check event ID, date, time, timezone, type, status, task ID, title and colour. The edit entry also has the previous title/colour. Confirm earlier files did not change.
-4. Add another task, quit and run `npm start` again; confirm its title and state remain. Repeat with a completed task if desired.
-5. Failure test: rename the vault folder temporarily, edit or complete a task, and check the pending warning. Restore the folder's **original name**, click **Retry pending events**, then check that the missing event appears once without changing older files. Pending events block vault switching.
+1. Select a vault and add `Read chapter 3`. Click its **Focus** button. Set length to **1 minute** and save it. Click Start, wait briefly, Pause, wait several seconds, Resume, then Finish early. Check the list shows the actual active seconds (less than the planned minute), the task remains Open, and `FocusDesk/focus/` has one `focus-start` and one `focus-completed` `.md` event with matching session ID, task ID/title snapshot, date/time/timezone, and actual active duration.
+2. Type `Review notes` without selecting a task, Start, then **Stop / Cancel**. Check the confirmation and that no completed-history row is added. A `focus-cancelled` event should appear.
+3. Start another 1-minute activity and let the timer reach zero. Check one completion event and a history row showing actual focused time. For the extension, start a separate session, click **+5 minutes** once, and check the button disappears and the remaining time grows; Finish early to avoid waiting.
+4. Start a session and close the window while it runs. Reopen the app: it must say **Interrupted** and offer Resume or Cancel, without adding closed-app time. Resume and Finish or choose Cancel. Check the history and events accordingly.
+5. To test logging failure, rename the vault folder while a session is running, then Finish. The local history should remain, with a pending warning. Restore the **original folder name**, click **Retry pending events**, and check the focus event appears once. Pending events block switching vaults.
 
 ## How it fits together
 
-`src/main.js` opens the window, owns the native folder picker, and connects task actions to storage. `src/preload.js` gives the web page only those allowed actions. `src/index.html`, `src/style.css`, and `src/renderer.js` make the page and task controls. `src/store.js` owns local JSON and vault Markdown logging. Each action saves its new task state **and a pending event together** before trying the vault; retry uses the original event ID and does not overwrite existing files. `tests/store.test.js` checks these file behaviors without opening a window. `package-lock.json` pins dependency versions for repeatable installation.
+`src/main.js` owns the window, folder picker, one-second checkpoint timer and close handling. `src/preload.js` exposes only named actions to the page. `src/index.html`, `src/style.css`, and `src/renderer.js` display and operate tasks, focus controls, and history. `src/store.js` saves state in Electron's app-data `state.json` and queues vault events before writing them as new files. `tests/store.test.js` covers tasks; `tests/focus.test.js` uses a controllable clock to verify timing without long waits. `package-lock.json` pins dependency versions for repeatable installs.
 
 ## Limits
 
-A vault folder must contain `.obsidian`. If a vault write fails, the local task change remains, but its event needs retry before switching vaults. Keep backups of app data and vault; this is student-project software, not a finished release. Deleting a task does not delete earlier event history. The native folder picker still needs a user-run manual check on machines where desktop automation lacks permission. There is no focus timer or report yet.
+Break timers and the chart/report are next. A vault must contain `.obsidian`. If vault logging fails, task or session changes remain locally saved, but pending events must be retried for their original vault before switching. Keep backups of your app data and vault; this is student-project software. Native folder-picker click-through still needs a user-run manual check on machines where desktop automation lacks permission.

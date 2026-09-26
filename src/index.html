@@ -27,7 +27,37 @@
       <p id="message" role="status"></p>
       <ul id="tasks"></ul>
     </section>
-    <p class="footnote">Next stage: focus timer, breaks, and reports. Completing a task does not log focus time.</p>
+    <section class="panel" id="focus" aria-label="Focus timer">
+      <h2>Focus</h2>
+      <form id="focus-settings" class="focus-settings">
+        <label for="focus-minutes">Focus length (minutes, 1–180)</label>
+        <input id="focus-minutes" type="number" min="1" max="180" step="1" required>
+        <button type="submit">Save length</button>
+      </form>
+      <div id="focus-setup">
+        <label for="focus-task">Choose a task</label>
+        <select id="focus-task"><option value="">No task — use a description instead</option></select>
+        <label for="focus-description">Or describe your activity</label>
+        <input id="focus-description" maxlength="200" placeholder="e.g. Review lecture notes">
+        <button id="focus-start" type="button" disabled>Start focus</button>
+      </div>
+      <div id="focus-active" hidden>
+        <p id="focus-label"></p>
+        <p id="focus-clock" aria-live="off">25:00</p>
+        <p id="focus-status" role="status"></p>
+        <div class="focus-actions">
+          <button id="focus-pause" type="button">Pause</button>
+          <button id="focus-resume" type="button" hidden>Resume</button>
+          <button id="focus-extend" type="button">+5 minutes (once)</button>
+          <button id="focus-finish" type="button">Finish early</button>
+          <button id="focus-stop" type="button">Stop / Cancel</button>
+        </div>
+      </div>
+      <p id="focus-message" role="status"></p>
+      <h3>Completed focus sessions</h3>
+      <ul id="focus-history"></ul>
+    </section>
+    <p class="footnote">Breaks and the day/week/month chart are planned for the next milestone. Completing focus does not complete its task.</p>
   </main>
 </body>
 </html>

@@ -1,6 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
-// Give the web page only these four actions, not unrestricted file-system access.
+// The web page gets only these named operations, not unrestricted file access.
 contextBridge.exposeInMainWorld('focusDesk', {
   getState: () => ipcRenderer.invoke('state:get'),
   chooseVault: () => ipcRenderer.invoke('vault:choose'),
@@ -9,5 +9,12 @@ contextBridge.exposeInMainWorld('focusDesk', {
   completeTask: id => ipcRenderer.invoke('task:complete', id),
   reopenTask: id => ipcRenderer.invoke('task:reopen', id),
   deleteTask: id => ipcRenderer.invoke('task:delete', id),
-  retryPending: () => ipcRenderer.invoke('events:retry')
+  retryPending: () => ipcRenderer.invoke('events:retry'),
+  setFocusMinutes: minutes => ipcRenderer.invoke('focus:settings', minutes),
+  startFocus: selection => ipcRenderer.invoke('focus:start', selection),
+  pauseFocus: () => ipcRenderer.invoke('focus:pause'),
+  resumeFocus: () => ipcRenderer.invoke('focus:resume'),
+  stopFocus: () => ipcRenderer.invoke('focus:stop'),
+  finishFocus: () => ipcRenderer.invoke('focus:finish'),
+  extendFocus: () => ipcRenderer.invoke('focus:extend')
 });
