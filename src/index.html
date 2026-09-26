@@ -6,11 +6,13 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'">
   <title>FocusDesk</title>
   <link rel="stylesheet" href="style.css">
+  <script src="report.js" defer></script>
   <script src="renderer.js" defer></script>
 </head>
 <body>
   <main>
-    <header><span class="eyebrow">FOCUSDESK · TASKS</span><h1>Tasks</h1><p>Choose an Obsidian vault, then capture what you need to do.</p></header>
+    <header><span class="eyebrow">STUDY WITH FOCUS</span><h1>FocusDesk</h1><p>Plan tasks, focus with a timer, and see where your study time went.</p></header>
+    <nav class="section-nav" aria-label="App sections"><a href="#tasks-section">Tasks</a><a href="#focus">Focus</a><a href="#report">Report</a></nav>
     <section class="panel" aria-label="Vault settings">
       <h2>Obsidian vault</h2>
       <p id="vault-label">Loading…</p>
@@ -18,7 +20,7 @@
       <div id="pending" role="status" hidden></div>
       <button id="retry" type="button" hidden>Retry pending events</button>
     </section>
-    <section class="panel" aria-label="Task list">
+    <section class="panel" id="tasks-section" aria-label="Task list">
       <h2>Your tasks</h2>
       <form id="task-form">
         <label for="task-title">Task title</label>
@@ -71,7 +73,18 @@
       <h3>Completed focus sessions</h3>
       <ul id="focus-history"></ul>
     </section>
-    <p class="footnote">The day/week/month report chart is planned for the next milestone. Break minutes never count as focus.</p>
+    <section class="panel" id="report" aria-label="Focus report">
+      <h2>Focus report</h2>
+      <p class="footnote">Actual completed focus time by task. Breaks and cancelled sessions are excluded.</p>
+      <div class="report-filters" aria-label="Report period">
+        <button type="button" data-report-period="day" aria-pressed="true">Day</button>
+        <button type="button" data-report-period="week" aria-pressed="false">Week</button>
+        <button type="button" data-report-period="month" aria-pressed="false">Month</button>
+      </div>
+      <p id="report-range"></p>
+      <p id="report-total"></p>
+      <ul id="report-bars" aria-label="Focus time bar chart"></ul>
+    </section>
   </main>
 </body>
 </html>

@@ -163,6 +163,60 @@ const focusDescription = document.querySelector('#focus-description');
 const focusMessage = document.querySelector('#focus-message');
 let latestState = null;
 let focusBusy = false;
+let reportPeriod = 'day';
+let reportSignature = '';
+
+function formatFocusTime(ms) {
+  const minutes = ms / 60_000;
+  if (minutes >= 60) {
+    const rounded = Math.round(minutes);
+    return `${Math.floor(rounded / 60)} hr ${rounded % 60} min`;
+  }
+  return `${(Math.round(minutes * 10) / 10).toFixed(1).replace(/\.0$/, '')} min`;
+}
+
+function renderReport(state) {
+  const today = new Date();
+  const signature = JSON.stringify([reportPeriod, today.toDateString(), state.sessions, state.tasks.map(task => [task.id, task.title, task.colour])]);
+  if (signature === reportSignature) return;
+  reportSignature = signature;
+  const { start, end, bars, totalMs } = window.FocusDeskReport.buildReport(state.sessions, state.tasks, reportPeriod, today);
+  const date = value => value.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+  const lastDay = new Date(end.getFullYear(), end.getMonth(), end.getDate() - 1);
+  document.querySelector('#report-range').textContent = reportPeriod === 'day' ? date(start) : `${date(start)} – ${date(lastDay)}`;
+  document.querySelector('#report-total').textContent = `Total focus: ${formatFocusTime(totalMs)}`;
+  const list = document.querySelector('#report-bars');
+  list.replaceChildren();
+  if (!bars.length) {
+    const empty = document.createElement('li');
+    empty.className = 'empty';
+    empty.textContent = 'No completed focus time in this period yet.';
+    list.append(empty);
+  }
+  const maximum = Math.max(...bars.map(bar => bar.actualMs), 1);
+  for (const bar of bars) {
+    const row = document.createElement('li');
+    row.className = 'report-row';
+    const label = document.createElement('span');
+    label.textContent = bar.label;
+    const time = document.createElement('strong');
+    time.textContent = formatFocusTime(bar.actualMs);
+    const graphic = document.createElement('progress');
+    graphic.className = `report-bar colour-${['sage', 'blue', 'peach', 'lavender'].includes(bar.colour) ? bar.colour : 'other'}`;
+    graphic.max = maximum;
+    graphic.value = bar.actualMs;
+    graphic.setAttribute('aria-label', `${bar.label}: ${time.textContent}`);
+    row.append(label, time, graphic);
+    list.append(row);
+  }
+}
+
+for (const button of document.querySelectorAll('[data-report-period]')) button.addEventListener('click', () => {
+  reportPeriod = button.dataset.reportPeriod;
+  for (const choice of document.querySelectorAll('[data-report-period]')) choice.setAttribute('aria-pressed', String(choice === button));
+  reportSignature = '';
+  if (latestState) renderReport(latestState);
+});
 
 function updateStartAvailability() {
   document.querySelector('#focus-start').disabled = !latestState?.vaultPath || !!latestState.activeSession || !!latestState.activeBreak ||
@@ -176,6 +230,7 @@ function formatClock(ms) {
 
 function renderFocus(state, updateTasks = false) {
   latestState = state;
+  renderReport(state);
   if (updateTasks) {
     const selected = focusTask.value;
     focusTask.replaceChildren(new Option('No task — use a description instead', ''));
