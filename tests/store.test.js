@@ -198,3 +198,21 @@ test('edit, complete, reopen and delete queue separately while vault is missing,
     assert.equal(fs.readdirSync(dir).filter(file => fs.readFileSync(path.join(dir, file), 'utf8').includes(`Event type: ${type}`)).length, 1);
   }
 });
+
+test('optional task details persist, validate, and keep older tasks compatible', t => {
+  const { data, vault } = fixture(t);
+  const store = createStore(data);
+  store.selectVault(vault);
+  const task = store.createTask('Essay', { description: 'Draft an outline', focusMinutes: 40, breakMinutes: 12 });
+  assert.equal(createStore(data).getState().tasks[0].description, 'Draft an outline');
+  assert.equal(task.focusMinutes, 40);
+  const edited = store.editTask(task.id, 'Essay', 'blue', { description: '', focusMinutes: 25, breakMinutes: 10 });
+  assert.equal(edited.description, '');
+  assert.equal(edited.breakMinutes, 10);
+  assert.throws(() => store.createTask('Bad', { focusMinutes: 0 }), /1.*180/);
+  assert.throws(() => store.editTask(task.id, 'Essay', 'blue', { breakMinutes: 181 }), /1.*180/);
+  const legacy = store.createTask('Older task');
+  assert.equal(legacy.focusMinutes, undefined);
+  assert.equal(store.editTask(legacy.id, 'Older task', 'sage').title, 'Older task');
+  assert.equal(createStore(data).getState().tasks.length, 2);
+});

@@ -17,8 +17,8 @@ app.whenReady().then(() => {
     if (result.canceled) return store.getState();
     return store.selectVault(result.filePaths[0]);
   });
-  ipcMain.handle('task:create', (_event, title) => store.createTask(title));
-  ipcMain.handle('task:edit', (_event, id, title, colour) => store.editTask(id, title, colour));
+  ipcMain.handle('task:create', (_event, title, details) => store.createTask(title, details));
+  ipcMain.handle('task:edit', (_event, id, title, colour, details) => store.editTask(id, title, colour, details));
   ipcMain.handle('task:complete', (_event, id) => store.completeTask(id));
   ipcMain.handle('task:reopen', (_event, id) => store.reopenTask(id));
   ipcMain.handle('task:delete', (_event, id) => store.deleteTask(id));

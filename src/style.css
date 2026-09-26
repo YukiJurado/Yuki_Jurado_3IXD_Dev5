@@ -64,3 +64,66 @@ li.empty { color: #738078; border-style: dashed; }
 .report-bar.colour-peach { accent-color: #e5a486; }
 .report-bar.colour-lavender { accent-color: #af9bd3; }
 .report-bar.colour-other { accent-color: #82939e; }
+
+/* The sketches inform the hierarchy; this is a desktop interpretation, not a tracing. */
+:root { color: #203850; background: #eef4f9; }
+main { max-width: 980px; padding: 32px 28px 64px; }
+header { padding: 16px 4px 8px; }
+header p, .page-heading p { color: #61778e; }
+.eyebrow { color: #507aa3; }
+.section-nav { border-bottom: 1px solid #d1e0ed; padding: 6px 0 18px; margin-bottom: 18px; }
+.section-nav { position: sticky; top: 0; z-index: 2; background: #eef4f9; }
+.section-nav a, .report-filters button { background: #e1edf7; color: #2f5f8a; }
+.section-nav a[aria-current="page"], .report-filters button[aria-pressed="true"] { background: #316a9c; color: white; }
+.section-nav a:hover, .section-nav a:focus-visible { background: #c9dfef; outline-color: #316a9c; }
+.panel { border-color: #d8e5f0; box-shadow: 0 8px 26px #244f7610; margin: 16px 0; }
+.vault-panel { padding: 14px 20px; }
+.vault-panel h2 { font-size: 15px; margin: 0; }
+.vault-panel p { margin: 4px 0; font-size: 13px; }
+.vault-panel button { padding: 6px 12px; font-size: 13px; }
+button { background: #316a9c; }
+button:hover { background: #245780; }
+button:disabled { background: #abbccc; }
+input, textarea, select { border-color: #b8ccde; background: #fbfdff; }
+input:focus, textarea:focus, select:focus, button:focus-visible { outline: 2px solid #467fb0; outline-offset: 2px; }
+textarea { display: block; width: 100%; min-height: 76px; padding: 10px 12px; border: 1px solid #b8ccde; border-radius: 9px; font: inherit; resize: vertical; }
+summary { cursor: pointer; color: #316a9c; font-weight: 600; }
+details { margin: 14px 0; }
+.page-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; padding: 12px 4px 0; }
+.page { scroll-margin-top: 90px; }
+.page-heading h2 { font-size: 32px; margin: 2px 0; }
+.page-heading p { margin: 0; }
+.page-heading a { color: #316a9c; font-weight: 700; white-space: nowrap; }
+.field-row { display: flex; flex-wrap: wrap; gap: 16px; }
+.field-row label { flex: 1 1 180px; }
+.field-row input { display: block; width: 100%; margin-top: 5px; }
+li { border-color: #dce8f2; }
+.task-card { border-left-color: #90b7d5; }
+.task-info { flex: 1 1 200px; }
+.task-info span { color: #657f98; }
+.task-info p { margin: 3px 0; color: #526c83; font-size: 14px; white-space: pre-wrap; }
+.completed .task-info strong { color: #76889a; }
+.edit-form textarea { width: 100%; }
+.edit-form label:has(textarea) { flex-basis: 100%; }
+#focus h3, #timer h3, #stats h3, #tasks h3 { font-size: 18px; margin: 0 0 10px; }
+.focus-settings { padding-bottom: 14px; border-bottom-color: #dce8f2; }
+.focus-settings label { flex: 1 1 160px; }
+.focus-settings input { display: block; width: 100%; margin-top: 5px; }
+.timer-panel { padding: 28px; }
+#focus-clock { color: #285d8b; text-align: center; padding: 14px; }
+#focus-label, #focus-status { text-align: center; }
+#focus-setup { margin-top: 16px; }
+#focus-setup details { margin: 14px 0 0; }
+#focus-setup button { margin-top: 18px; }
+#focus-stop, .task-actions button:last-child { background: #765d66; }
+#report-range { color: #61778e; }
+.report-filters button[aria-pressed="true"] { background: #316a9c; }
+.report-bar { accent-color: #719fc4; }
+.report-bar.colour-blue { accent-color: #4d88ba; }
+.report-bar.colour-other { accent-color: #8ca5b8; }
+@media (max-width: 640px) {
+  main { padding: 16px; }
+  .page-heading { align-items: start; flex-direction: column; }
+  .entry { flex-wrap: wrap; }
+  .entry button { width: 100%; }
+}

@@ -4,8 +4,8 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('focusDesk', {
   getState: () => ipcRenderer.invoke('state:get'),
   chooseVault: () => ipcRenderer.invoke('vault:choose'),
-  createTask: title => ipcRenderer.invoke('task:create', title),
-  editTask: (id, title, colour) => ipcRenderer.invoke('task:edit', id, title, colour),
+  createTask: (title, details) => ipcRenderer.invoke('task:create', title, details),
+  editTask: (id, title, colour, details) => ipcRenderer.invoke('task:edit', id, title, colour, details),
   completeTask: id => ipcRenderer.invoke('task:complete', id),
   reopenTask: id => ipcRenderer.invoke('task:reopen', id),
   deleteTask: id => ipcRenderer.invoke('task:delete', id),

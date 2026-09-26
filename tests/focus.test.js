@@ -200,3 +200,21 @@ test('a Stop click after zero cannot turn an elapsed session into a cancellation
   assert.equal(store.getState().sessions[0].actualMs, 60_000);
   assert.equal(events().filter(md => md.includes('focus-cancelled')).length, 0);
 });
+
+test('task suggestions initialise a session but adjustable lengths override them without changing the task', t => {
+  const { store, advance } = setup(t);
+  const task = store.createTask('Essay', { focusMinutes: 40, breakMinutes: 12 });
+  const first = store.startFocus({ taskId: task.id, minutes: 30, breakMinutes: 8 });
+  assert.equal(first.plannedMs, 30 * 60_000);
+  advance(2_000);
+  store.finishFocus();
+  assert.deepEqual(store.getState().breakOffer, { kind: 'long', minutes: 8 });
+  assert.equal(store.getState().tasks[0].focusMinutes, 40);
+  const second = store.startFocus({ taskId: task.id });
+  assert.equal(second.configuredMinutes, 40);
+  advance(1_000);
+  store.finishFocus();
+  assert.deepEqual(store.getState().breakOffer, { kind: 'long', minutes: 12 });
+  assert.throws(() => store.startFocus({ taskId: task.id, minutes: 0 }), /1.*180/);
+  assert.throws(() => store.startFocus({ taskId: task.id, breakMinutes: 181 }), /1.*180/);
+});

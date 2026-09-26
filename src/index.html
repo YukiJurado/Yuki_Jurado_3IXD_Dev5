@@ -11,36 +11,44 @@
 </head>
 <body>
   <main>
-    <header><span class="eyebrow">STUDY WITH FOCUS</span><h1>FocusDesk</h1><p>Plan tasks, focus with a timer, and see where your study time went.</p></header>
-    <nav class="section-nav" aria-label="App sections"><a href="#tasks-section">Tasks</a><a href="#focus">Focus</a><a href="#report">Report</a></nav>
-    <section class="panel" aria-label="Vault settings">
+    <header><span class="eyebrow">A QUIETER WAY TO STUDY</span><h1>FocusDesk</h1><p>Plan what matters. Make room to focus.</p></header>
+    <nav class="section-nav" aria-label="App pages"><a href="#tasks" data-page-link="tasks">Tasks / Home</a><a href="#timer" data-page-link="timer">Timer</a><a href="#stats" data-page-link="stats">Stats</a></nav>
+    <section class="panel vault-panel" aria-label="Vault settings">
       <h2>Obsidian vault</h2>
       <p id="vault-label">Loading…</p>
       <button id="choose-vault" type="button">Choose vault folder</button>
       <div id="pending" role="status" hidden></div>
       <button id="retry" type="button" hidden>Retry pending events</button>
     </section>
-    <section class="panel" id="tasks-section" aria-label="Task list">
-      <h2>Your tasks</h2>
+    <section class="page" id="tasks" aria-label="Tasks page">
+      <div class="page-heading"><div><span class="eyebrow">YOUR SPACE</span><h2>Tasks</h2><p>Choose a task to start a focused session.</p></div><a href="#stats">View stats →</a></div>
+      <div class="panel"><h3>Add a task</h3>
       <form id="task-form">
         <label for="task-title">Task title</label>
         <div class="entry"><input id="task-title" name="title" maxlength="200" placeholder="e.g. Read chapter 3" required><button id="add-task" type="submit">Add task</button></div>
+        <details class="optional-fields"><summary>Optional details &amp; suggested times</summary>
+          <label for="task-description">Description</label><textarea id="task-description" maxlength="500" placeholder="What will you work on?"></textarea>
+          <div class="field-row"><label for="task-focus">Suggested focus (minutes)<input id="task-focus" type="number" min="1" max="180" step="1" value="25" required></label>
+          <label for="task-break">Suggested break (minutes)<input id="task-break" type="number" min="1" max="180" step="1" value="10" required></label></div>
+        </details>
       </form>
       <p id="message" role="status"></p>
-      <ul id="tasks"></ul>
+      </div><div class="panel"><h3>Your task list</h3>
+      <ul id="task-list"></ul>
+      </div>
     </section>
-    <section class="panel" id="focus" aria-label="Focus timer">
-      <h2>Focus</h2>
+    <section class="page" id="timer" aria-label="Timer page" hidden>
+      <div class="page-heading"><div><span class="eyebrow">TIME TO FOCUS</span><h2>Timer</h2><p>Set your pace, then begin.</p></div><a href="#tasks">← Tasks / Home</a></div>
+      <div class="panel timer-panel">
       <form id="focus-settings" class="focus-settings">
-        <label for="focus-minutes">Focus length (minutes, 1–180)</label>
-        <input id="focus-minutes" type="number" min="1" max="180" step="1" required>
-        <button type="submit">Save length</button>
+        <label for="focus-minutes">Focus minutes<input id="focus-minutes" type="number" min="1" max="180" step="1" required></label>
+        <label for="session-break-minutes">Break minutes<input id="session-break-minutes" type="number" min="1" max="180" step="1" required></label>
       </form>
       <div id="focus-setup">
         <label for="focus-task">Choose a task</label>
         <select id="focus-task"><option value="">No task — use a description instead</option></select>
-        <label for="focus-description">Or describe your activity</label>
-        <input id="focus-description" maxlength="200" placeholder="e.g. Review lecture notes">
+        <details id="other-activity"><summary>Focus on another activity</summary><label for="focus-description">Short activity description</label>
+        <input id="focus-description" maxlength="200" placeholder="e.g. Review lecture notes"></details>
         <button id="focus-start" type="button" disabled>Start focus</button>
       </div>
       <div id="focus-active" hidden>
@@ -56,12 +64,13 @@
         </div>
       </div>
       <p id="focus-message" role="status"></p>
+      </div><div class="panel">
       <h3>Break (optional)</h3>
-      <form id="break-settings" class="focus-settings">
+      <details><summary>Default short &amp; long break lengths</summary><form id="break-settings" class="focus-settings">
         <label for="short-break">Short break minutes<input id="short-break" type="number" min="1" max="180" required></label>
         <label for="long-break">Long break minutes<input id="long-break" type="number" min="1" max="180" required></label>
         <button type="submit">Save breaks</button>
-      </form>
+      </form></details>
       <div id="break-offer" hidden><p id="break-offer-label"></p><button id="break-start" type="button">Start break</button></div>
       <div id="break-active" hidden>
         <p id="break-label"></p><p id="break-clock">10:00</p>
@@ -70,11 +79,15 @@
         <button id="break-stop" type="button">Stop break</button>
       </div>
       <p id="break-message" role="status"></p>
+      </div>
+    </section>
+    <section class="page" id="stats" aria-label="Stats page" hidden>
+      <div class="page-heading"><div><span class="eyebrow">YOUR PROGRESS</span><h2>Stats</h2><p>See where your focus time went.</p></div><a href="#tasks">← Tasks / Home</a></div>
+      <div class="panel">
       <h3>Completed focus sessions</h3>
       <ul id="focus-history"></ul>
-    </section>
-    <section class="panel" id="report" aria-label="Focus report">
-      <h2>Focus report</h2>
+      </div><div class="panel">
+      <h3>Focus time by task</h3>
       <p class="footnote">Actual completed focus time by task. Breaks and cancelled sessions are excluded.</p>
       <div class="report-filters" aria-label="Report period">
         <button type="button" data-report-period="day" aria-pressed="true">Day</button>
@@ -84,6 +97,7 @@
       <p id="report-range"></p>
       <p id="report-total"></p>
       <ul id="report-bars" aria-label="Focus time bar chart"></ul>
+      </div>
     </section>
   </main>
 </body>

@@ -97,7 +97,7 @@ function createStore(dataFile, { now = Date.now } = {}) {
 
   function eventFor(task, type, previous) {
     const before = previous ? `- Previous title: ${previous.title}\n- Previous colour: ${previous.colour || 'sage'}\n` : '';
-    recordEvent('tasks', type, task.status, `- Task ID: ${task.id}\n${before}- Title: ${task.title}\n- Colour: ${task.colour || 'sage'}\n`);
+    recordEvent('tasks', type, task.status, `- Task ID: ${task.id}\n${before}- Title: ${task.title}\n- Colour: ${task.colour || 'sage'}\n- Description: ${task.description || ''}\n- Suggested focus minutes: ${task.focusMinutes ?? 25}\n- Suggested break minutes: ${task.breakMinutes ?? 10}\n`);
   }
 
   function validTitle(title) {
@@ -105,6 +105,21 @@ function createStore(dataFile, { now = Date.now } = {}) {
     const cleaned = title.trim().replace(/\s+/g, ' ');
     if (cleaned.length > 200) throw new Error('Task title must be 200 characters or fewer.');
     return cleaned;
+  }
+
+  function validMinutes(value, label) {
+    if (!Number.isInteger(value) || value < 1 || value > 180) throw new Error(`${label} must be 1 to 180 whole minutes.`);
+    return value;
+  }
+
+  function taskDetails(details = {}, previous = {}) {
+    const description = details.description ?? previous.description ?? '';
+    if (typeof description !== 'string' || description.length > 500) throw new Error('Description must be 500 characters or fewer.');
+    return {
+      description: description.trim(),
+      focusMinutes: validMinutes(details.focusMinutes ?? previous.focusMinutes ?? 25, 'Suggested focus length'),
+      breakMinutes: validMinutes(details.breakMinutes ?? previous.breakMinutes ?? 10, 'Suggested break length')
+    };
   }
 
   function change(operation) {
@@ -118,27 +133,31 @@ function createStore(dataFile, { now = Date.now } = {}) {
     }
   }
 
-  function createTask(title) {
+  function createTask(title, details) {
     if (!state.vaultPath) throw new Error('Select an Obsidian vault first.');
     const cleaned = validTitle(title);
+    const options = details === undefined ? null : taskDetails(details);
     return change(() => {
-      const task = { id: randomUUID(), title: cleaned, colour: 'sage', status: 'open' };
+      const task = { id: randomUUID(), title: cleaned, colour: 'sage', status: 'open', ...(options || {}) };
       state.tasks.push(task);
       eventFor(task, 'task-created');
       return task;
     });
   }
 
-  function editTask(id, title, colour) {
+  function editTask(id, title, colour, details) {
     const task = state.tasks.find(item => item.id === id);
     if (!task) throw new Error('Task not found.');
     const nextTitle = validTitle(title);
     if (!COLOURS.includes(colour)) throw new Error('Choose a valid task colour.');
-    if (task.title === nextTitle && (task.colour || 'sage') === colour) return structuredClone(task);
+    const options = details === undefined ? null : taskDetails(details, task);
+    if (task.title === nextTitle && (task.colour || 'sage') === colour &&
+      (!options || (task.description || '') === options.description && (task.focusMinutes ?? 25) === options.focusMinutes && (task.breakMinutes ?? 10) === options.breakMinutes)) return structuredClone(task);
     const previous = { ...task };
     return change(() => {
       task.title = nextTitle;
       task.colour = colour;
+      if (options) Object.assign(task, options);
       eventFor(task, 'task-edited', previous);
       return structuredClone(task);
     });
@@ -179,7 +198,7 @@ function createStore(dataFile, { now = Date.now } = {}) {
     return `- Session ID: ${session.id}\n${link}- Planned minutes: ${session.plannedMs / 60_000}\n${actual === null ? '' : `- Actual active duration: ${actual} ms\n`}`;
   }
 
-  function startFocus({ taskId = null, description = '' } = {}) {
+  function startFocus({ taskId = null, description = '', minutes, breakMinutes } = {}) {
     if (!state.vaultPath) throw new Error('Select an Obsidian vault first.');
     if (state.activeSession) throw new Error('A focus session is already active.');
     if (state.activeBreak) throw new Error('Finish or stop the break before starting focus.');
@@ -188,12 +207,14 @@ function createStore(dataFile, { now = Date.now } = {}) {
     const task = taskId && state.tasks.find(item => item.id === taskId);
     if (taskId && !task) throw new Error('Task not found.');
     const activity = task ? null : validTitle(description);
+    const plan = validMinutes(minutes ?? task?.focusMinutes ?? state.focusMinutes, 'Focus length');
+    const breakLength = breakMinutes === undefined ? (task?.breakMinutes ?? null) : validMinutes(breakMinutes, 'Break length');
     return change(() => {
       const session = {
         id: randomUUID(), taskId: task ? task.id : null, taskTitle: task ? task.title : null,
         description: activity, vaultPath: state.vaultPath, status: 'running',
         startedAt: new Date(now()).toISOString(), activeMs: 0, segmentStartedAt: now(),
-        plannedMs: state.focusMinutes * 60_000, configuredMinutes: state.focusMinutes, extended: false
+        plannedMs: plan * 60_000, configuredMinutes: plan, breakMinutes: breakLength, extended: false
       };
       state.breakOffer = null;
       state.activeSession = session;
@@ -258,7 +279,7 @@ function createStore(dataFile, { now = Date.now } = {}) {
       state.sessions.push(finished);
       state.activeSession = null;
       const kind = (session.configuredMinutes ?? session.plannedMs / 60_000) <= 25 ? 'short' : 'long';
-      state.breakOffer = { kind, minutes: state.breakMinutes[kind] };
+      state.breakOffer = { kind, minutes: session.breakMinutes ?? state.breakMinutes[kind] };
       recordEvent('focus', 'focus-completed', 'completed', focusDetails(finished, finished.actualMs), finished.vaultPath);
       return structuredClone(finished);
     });
