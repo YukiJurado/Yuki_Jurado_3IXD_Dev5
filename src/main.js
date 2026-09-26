@@ -30,6 +30,11 @@ app.whenReady().then(() => {
   ipcMain.handle('focus:stop', () => store.stopFocus());
   ipcMain.handle('focus:finish', () => store.finishFocus());
   ipcMain.handle('focus:extend', () => store.extendFocus());
+  ipcMain.handle('break:settings', (_event, short, long) => store.setBreakMinutes(short, long));
+  ipcMain.handle('break:start', () => store.startBreak());
+  ipcMain.handle('break:resume', () => store.resumeBreak());
+  ipcMain.handle('break:finish', () => store.finishBreak());
+  ipcMain.handle('break:stop', () => store.stopBreak());
   setInterval(() => {
     try { store.tick(); } catch (error) { console.error('Focus checkpoint failed:', error); }
   }, 1000);

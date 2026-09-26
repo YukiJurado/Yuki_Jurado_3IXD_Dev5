@@ -54,10 +54,24 @@
         </div>
       </div>
       <p id="focus-message" role="status"></p>
+      <h3>Break (optional)</h3>
+      <form id="break-settings" class="focus-settings">
+        <label for="short-break">Short break minutes<input id="short-break" type="number" min="1" max="180" required></label>
+        <label for="long-break">Long break minutes<input id="long-break" type="number" min="1" max="180" required></label>
+        <button type="submit">Save breaks</button>
+      </form>
+      <div id="break-offer" hidden><p id="break-offer-label"></p><button id="break-start" type="button">Start break</button></div>
+      <div id="break-active" hidden>
+        <p id="break-label"></p><p id="break-clock">10:00</p>
+        <button id="break-resume" type="button" hidden>Resume break</button>
+        <button id="break-finish" type="button">Finish break</button>
+        <button id="break-stop" type="button">Stop break</button>
+      </div>
+      <p id="break-message" role="status"></p>
       <h3>Completed focus sessions</h3>
       <ul id="focus-history"></ul>
     </section>
-    <p class="footnote">Breaks and the day/week/month chart are planned for the next milestone. Completing focus does not complete its task.</p>
+    <p class="footnote">The day/week/month report chart is planned for the next milestone. Break minutes never count as focus.</p>
   </main>
 </body>
 </html>

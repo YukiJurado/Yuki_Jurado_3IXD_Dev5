@@ -16,5 +16,10 @@ contextBridge.exposeInMainWorld('focusDesk', {
   resumeFocus: () => ipcRenderer.invoke('focus:resume'),
   stopFocus: () => ipcRenderer.invoke('focus:stop'),
   finishFocus: () => ipcRenderer.invoke('focus:finish'),
-  extendFocus: () => ipcRenderer.invoke('focus:extend')
+  extendFocus: () => ipcRenderer.invoke('focus:extend'),
+  setBreakMinutes: (short, long) => ipcRenderer.invoke('break:settings', short, long),
+  startBreak: () => ipcRenderer.invoke('break:start'),
+  resumeBreak: () => ipcRenderer.invoke('break:resume'),
+  finishBreak: () => ipcRenderer.invoke('break:finish'),
+  stopBreak: () => ipcRenderer.invoke('break:stop')
 });

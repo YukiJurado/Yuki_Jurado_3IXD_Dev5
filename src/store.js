@@ -11,6 +11,14 @@ function createStore(dataFile, { now = Date.now } = {}) {
   state.focusMinutes ??= 25;
   state.sessions ??= [];
   state.activeSession ??= null;
+  state.breakMinutes ??= { short: 10, long: 30 };
+  state.breakOffer ??= null;
+  state.activeBreak ??= null;
+  if (state.activeBreak?.status === 'running') {
+    state.activeBreak.status = 'paused';
+    state.activeBreak.segmentStartedAt = null;
+    save();
+  }
   // After a crash, the last saved active checkpoint is trusted; time while closed is not.
   if (state.activeSession && ['running', 'paused'].includes(state.activeSession.status)) {
     state.activeSession.status = 'interrupted';
@@ -174,6 +182,7 @@ function createStore(dataFile, { now = Date.now } = {}) {
   function startFocus({ taskId = null, description = '' } = {}) {
     if (!state.vaultPath) throw new Error('Select an Obsidian vault first.');
     if (state.activeSession) throw new Error('A focus session is already active.');
+    if (state.activeBreak) throw new Error('Finish or stop the break before starting focus.');
     if (taskId && description.trim()) throw new Error('Select either a task or a description.');
     if (!taskId && (typeof description !== 'string' || !description.trim())) throw new Error('Select a task or description.');
     const task = taskId && state.tasks.find(item => item.id === taskId);
@@ -184,8 +193,9 @@ function createStore(dataFile, { now = Date.now } = {}) {
         id: randomUUID(), taskId: task ? task.id : null, taskTitle: task ? task.title : null,
         description: activity, vaultPath: state.vaultPath, status: 'running',
         startedAt: new Date(now()).toISOString(), activeMs: 0, segmentStartedAt: now(),
-        plannedMs: state.focusMinutes * 60_000, extended: false
+        plannedMs: state.focusMinutes * 60_000, configuredMinutes: state.focusMinutes, extended: false
       };
+      state.breakOffer = null;
       state.activeSession = session;
       recordEvent('focus', 'focus-start', 'running', focusDetails(session), session.vaultPath);
       return structuredClone(session);
@@ -247,12 +257,19 @@ function createStore(dataFile, { now = Date.now } = {}) {
       delete finished.segmentStartedAt;
       state.sessions.push(finished);
       state.activeSession = null;
+      const kind = (session.configuredMinutes ?? session.plannedMs / 60_000) <= 25 ? 'short' : 'long';
+      state.breakOffer = { kind, minutes: state.breakMinutes[kind] };
       recordEvent('focus', 'focus-completed', 'completed', focusDetails(finished, finished.actualMs), finished.vaultPath);
       return structuredClone(finished);
     });
   }
 
   function tick() {
+    if (state.activeBreak?.status === 'running') change(() => {
+      settleBreak();
+      if (state.activeBreak.remainingMs === 0) state.activeBreak = null;
+      save();
+    });
     if (state.activeSession?.status !== 'running') return getState();
     change(() => {
       accrue(state.activeSession);
@@ -263,6 +280,12 @@ function createStore(dataFile, { now = Date.now } = {}) {
   }
 
   function interruptFocus() {
+    if (state.activeBreak?.status === 'running') change(() => {
+      settleBreak();
+      state.activeBreak.status = 'paused';
+      state.activeBreak.segmentStartedAt = null;
+      save();
+    });
     if (!state.activeSession || state.activeSession.status === 'interrupted') return getState();
     return change(() => {
       accrue(state.activeSession);
@@ -295,7 +318,52 @@ function createStore(dataFile, { now = Date.now } = {}) {
     });
   }
 
-  return { getState, selectVault, createTask, editTask, completeTask, reopenTask, deleteTask, retryPending, startFocus, stopFocus, pauseFocus, resumeFocus, finishFocus, tick, interruptFocus, setFocusMinutes, extendFocus };
+  function setBreakMinutes(short, long) {
+    if (![short, long].every(value => Number.isInteger(value) && value >= 1 && value <= 180)) {
+      throw new Error('Break lengths must be 1 to 180 whole minutes.');
+    }
+    return change(() => {
+      state.breakMinutes = { short, long };
+      save();
+      return getState().breakMinutes;
+    });
+  }
+
+  function settleBreak() {
+    const current = now();
+    state.activeBreak.remainingMs = Math.max(0, state.activeBreak.remainingMs - Math.max(0, current - state.activeBreak.segmentStartedAt));
+    state.activeBreak.segmentStartedAt = current;
+  }
+
+  function startBreak() {
+    if (!state.breakOffer || state.activeSession || state.activeBreak) throw new Error('No break is available to start.');
+    return change(() => {
+      const { kind, minutes } = state.breakOffer;
+      state.activeBreak = { kind, plannedMs: minutes * 60_000, remainingMs: minutes * 60_000, status: 'running', segmentStartedAt: now() };
+      state.breakOffer = null;
+      save();
+      return getState().activeBreak;
+    });
+  }
+
+  function resumeBreak() {
+    if (state.activeBreak?.status !== 'paused') throw new Error('No paused break to resume.');
+    return change(() => {
+      state.activeBreak.status = 'running';
+      state.activeBreak.segmentStartedAt = now();
+      save();
+      return getState().activeBreak;
+    });
+  }
+
+  function finishBreak() {
+    if (!state.activeBreak) throw new Error('No active break.');
+    return change(() => { state.activeBreak = null; save(); });
+  }
+
+  function stopBreak() { return finishBreak(); }
+
+  return { getState, selectVault, createTask, editTask, completeTask, reopenTask, deleteTask, retryPending, startFocus, stopFocus, pauseFocus, resumeFocus, finishFocus, tick, interruptFocus, setFocusMinutes, extendFocus, setBreakMinutes, startBreak, resumeBreak, finishBreak, stopBreak };
 }
 
 module.exports = { createStore };

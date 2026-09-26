@@ -165,7 +165,7 @@ let latestState = null;
 let focusBusy = false;
 
 function updateStartAvailability() {
-  document.querySelector('#focus-start').disabled = !latestState?.vaultPath || !!latestState.activeSession ||
+  document.querySelector('#focus-start').disabled = !latestState?.vaultPath || !!latestState.activeSession || !!latestState.activeBreak ||
     !(focusTask.value || focusDescription.value.trim());
 }
 
@@ -215,6 +215,21 @@ function renderFocus(state, updateTasks = false) {
     item.className = 'empty';
     item.textContent = 'No completed focus sessions yet.';
     history.append(item);
+  }
+  const shortInput = document.querySelector('#short-break');
+  const longInput = document.querySelector('#long-break');
+  if (document.activeElement !== shortInput) shortInput.value = state.breakMinutes.short;
+  if (document.activeElement !== longInput) longInput.value = state.breakMinutes.long;
+  document.querySelector('#break-offer').hidden = !state.breakOffer || !!state.activeBreak;
+  document.querySelector('#break-active').hidden = !state.activeBreak;
+  if (state.breakOffer) document.querySelector('#break-offer-label').textContent =
+    `Optional ${state.breakOffer.kind} break: ${state.breakOffer.minutes} minutes`;
+  if (state.activeBreak) {
+    const current = state.activeBreak;
+    document.querySelector('#break-label').textContent = `${current.kind} break${current.status === 'paused' ? ' — paused after closing the app' : ''}`;
+    const elapsed = current.status === 'running' ? Math.max(0, Date.now() - current.segmentStartedAt) : 0;
+    document.querySelector('#break-clock').textContent = formatClock(current.remainingMs - elapsed);
+    document.querySelector('#break-resume').hidden = current.status !== 'paused';
   }
   const count = state.pendingEvents.length;
   pending.hidden = retry.hidden = count === 0;
@@ -266,4 +281,24 @@ document.querySelector('#focus-stop').addEventListener('click', () => {
     focusAction(() => window.focusDesk.stopFocus(), 'Focus cancelled; partial time was not added to history.');
   }
 });
+
+async function breakAction(action, success) {
+  try {
+    await action();
+    document.querySelector('#break-message').textContent = success;
+    await refresh();
+  } catch (error) {
+    document.querySelector('#break-message').textContent = error.message;
+  }
+}
+document.querySelector('#break-settings').addEventListener('submit', event => {
+  event.preventDefault();
+  breakAction(() => window.focusDesk.setBreakMinutes(
+    Number(document.querySelector('#short-break').value), Number(document.querySelector('#long-break').value)
+  ), 'Break lengths saved.');
+});
+document.querySelector('#break-start').addEventListener('click', () => breakAction(() => window.focusDesk.startBreak(), 'Break started.'));
+document.querySelector('#break-resume').addEventListener('click', () => breakAction(() => window.focusDesk.resumeBreak(), 'Break resumed.'));
+document.querySelector('#break-finish').addEventListener('click', () => breakAction(() => window.focusDesk.finishBreak(), 'Break finished.'));
+document.querySelector('#break-stop').addEventListener('click', () => breakAction(() => window.focusDesk.stopBreak(), 'Break stopped.'));
 setInterval(() => refreshFocus().catch(error => { focusMessage.textContent = error.message; }), 500);
