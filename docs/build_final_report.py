@@ -178,7 +178,7 @@ story += [para('<b>Purpose and user.</b> FocusDesk is for a student who needs he
           para('Main user flow', 'Subsection'),
           bullet('Select an existing Obsidian vault, then create a task on Tasks / Home.', True),
           bullet('Click Focus on a task; Timer opens with suggested lengths, which can be adjusted for that session. Alternatively start a description-only activity.', True),
-          bullet('Complete focus, optionally take a break, then review actual active time on Stats. Mark the task complete separately when the work is truly done.', True),
+          bullet('At zero, a linked open task becomes Completed. The break prompt offers Start break or Later; Stats shows actual active time. Finishing early leaves the task open.', True),
           para('Acceptance checks', 'Subsection'),
           bullet('Tasks and completed sessions persist after restart; all required actions make one appropriate Markdown event in the selected vault.', True),
           bullet('Pause and closed-app time do not increase actual duration; cancelled sessions do not enter Stats; breaks do not enter focus totals.', True),
@@ -192,15 +192,15 @@ story += [grid([
     ('One combined app', 'Tasks, Timer and Stats are separate pages in one Electron window and one repository. A task can open its focus session directly.'),
     ('Electron + plain JS', 'HTML, CSS and JavaScript were already familiar from class; Electron provides desktop file and folder access without a remote service.'),
     ('Local state', 'Task, session, setting and pending-event data live in an app-owned JSON file, saved on meaningful changes.'),
-    ('Obsidian records', 'FocusDesk/tasks and FocusDesk/focus contain one uniquely named Markdown file per event. Records include date, time, timezone, type, status and identifiers. A failed write stays pending for retry.'),
+    ('Obsidian records', 'FocusDesk/tasks and FocusDesk/focus contain one uniquely named Markdown file per event. Records include date, time, timezone, type, status and identifiers. A failed write stays pending for retry. A generated Overview links records by task without changing them.'),
     ('Three-page layout', 'Tasks is home; task Focus opens Timer; Stats houses history and the bar chart. Blue surfaces and task-colour accents keep the interface calm and scannable.'),
     ('Usability', 'Stop warns about cancellation; Finish saves active time. Optional task suggestions provide a starting value without turning them into an estimate of actual time.'),
     ('Alternative not chosen', 'A Vue front end and two separate apps were considered. Plain JavaScript and one app reduce setup and integration work for this assignment.'),
 ], [122, WIDTH - 122]), Spacer(1, 15),
           para('Evidence from implementation', 'Subsection'),
-          bullet('The app passes 27 automated tests, including three break-notification checks. An earlier clean clone installed dependencies and passed the then-current 24 tests.', True),
+          bullet('The app passes 31 automated tests, including automatic task completion, break reminders, long-focus break suggestions and linked-vault overview checks. A fresh copy installed dependencies offline and passed all 31 tests.', True),
           bullet('An isolated Electron check used a disposable vault: task creation, task-to-Timer navigation, session overrides, completion, Stats, description-only focus, and a break worked.', True),
-          bullet('The student previously checked real-vault task and focus events in Obsidian; a final real-vault check of the redesigned app and an offline run remain useful before submission.', True),
+          bullet('The selected real vault has 14 FocusDesk event files and no pending writes. Obsidian displays the generated Overview and event backlinks; an offline UI run after these changes remains useful before submission.', True),
           para('These checks show what was exercised; they do not claim every possible timer or operating-system edge case has been manually tested.', 'CaptionX'),
           PageBreak()]
 
@@ -245,8 +245,9 @@ story += [para('These examples are from the student’s selected desktop vault a
           para('How logging works', 'Subsection'),
           bullet('Task events go to FocusDesk/tasks; focus starts, completions and cancellations go to FocusDesk/focus.', True),
           bullet('Each file name is a unique event ID. The original files remain unchanged after later edits or status changes.', True),
-          bullet('The app’s Stats chart is calculated from locally saved completed sessions; Obsidian receives event records, not an automatic chart note.', True),
-          para('The separate .md sample required for submission should be copied from an actual app-generated vault file. Do not use an isolated test-vault example as that sample.', 'CaptionX'),
+          bullet('FocusDesk/Overview.md groups the 14 existing task and focus records and links to each original event; the event files remain unchanged.', True),
+          bullet('The app’s Stats chart is calculated from locally saved completed sessions; Obsidian receives event records and the linked overview, not an automatic chart note.', True),
+          para('The separate submission sample, <i>Yuki_Jurado_3IXD_Dev5_Obsidiansample.md</i>, is an exact copy of a completed-focus record generated in the real vault.', 'CaptionX'),
           PageBreak()]
 
 # 9 — AI, reflection, sources
@@ -257,8 +258,8 @@ story += [para('AI note', 'Subsection'),
           card('“The most challenging part was connecting Codex with Hermes and keeping the files together so Obsidian could use them. I learned that Electron can run a local desktop app for a project like this.”<br/><br/>— Yuki Jevelle Jurado', PALE),
           Spacer(1, 13),
           para('Before final submission', 'Subsection'),
-          bullet('Run the redesigned app once with the real vault and once without internet; confirm the new task and focus events appear.', True),
-          bullet('Submit one app-generated .md sample separately using the brief’s required filename.', True),
+          bullet('Run the updated app once without internet, then create a short real-vault session and check that its events appear in the Overview.', True),
+          bullet('Submit the prepared app-generated .md sample separately using the brief’s required filename.', True),
           para('Sources', 'Subsection'),
           para('Student source: <i>App Research-Assignment 1.pdf</i> (Yuki Jevelle Jurado). Assignment source: <i>3IXD_Dev5_Assignment_1.pdf</i>. Product pages checked 27 September 2026; vendors may change features and pricing.', 'SmallX')]
 sources = [

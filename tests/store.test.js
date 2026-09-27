@@ -216,3 +216,16 @@ test('optional task details persist, validate, and keep older tasks compatible',
   assert.equal(store.editTask(legacy.id, 'Older task', 'sage').title, 'Older task');
   assert.equal(createStore(data).getState().tasks.length, 2);
 });
+
+test('a new long-focus task suggests the long break unless given a custom length', t => {
+  const { data, vault } = fixture(t);
+  const store = createStore(data);
+  store.selectVault(vault);
+  const longTask = store.createTask('Long reading', { focusMinutes: 50 });
+  const customTask = store.createTask('Custom break', { focusMinutes: 50, breakMinutes: 12 });
+  assert.equal(longTask.breakMinutes, 30);
+  assert.equal(customTask.breakMinutes, 12);
+  store.setBreakMinutes(15, 40);
+  const nextTask = store.createTask('Next long task', { focusMinutes: 50 });
+  assert.equal(nextTask.breakMinutes, 40);
+});

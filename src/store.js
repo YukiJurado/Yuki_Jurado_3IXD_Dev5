@@ -2,6 +2,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { randomUUID } = require('node:crypto');
+const { buildOverview } = require('./vault-overview');
 const COLOURS = ['sage', 'blue', 'peach', 'lavender'];
 
 function createStore(dataFile, { now = Date.now } = {}) {
@@ -42,6 +43,12 @@ function createStore(dataFile, { now = Date.now } = {}) {
       fs.statSync(path.join(folder, '.obsidian')).isDirectory();
   }
 
+  function refreshOverview() {
+    if (!state.vaultPath || !isVault(state.vaultPath)) return;
+    try { buildOverview(state.vaultPath); }
+    catch (error) { console.warn('Could not refresh the FocusDesk overview:', error); }
+  }
+
   function getState() {
     return structuredClone(state);
   }
@@ -54,6 +61,7 @@ function createStore(dataFile, { now = Date.now } = {}) {
     }
     state.vaultPath = folder;
     save();
+    refreshOverview();
     return getState();
   }
 
@@ -77,6 +85,7 @@ function createStore(dataFile, { now = Date.now } = {}) {
         // Keep the exact event (and its original vault) for a later retry.
       }
     }
+    refreshOverview();
     return getState();
   }
 
@@ -115,10 +124,12 @@ function createStore(dataFile, { now = Date.now } = {}) {
   function taskDetails(details = {}, previous = {}) {
     const description = details.description ?? previous.description ?? '';
     if (typeof description !== 'string' || description.length > 500) throw new Error('Description must be 500 characters or fewer.');
+    const focusMinutes = validMinutes(details.focusMinutes ?? previous.focusMinutes ?? 25, 'Suggested focus length');
+    const defaultBreak = focusMinutes <= 25 ? state.breakMinutes.short : state.breakMinutes.long;
     return {
       description: description.trim(),
-      focusMinutes: validMinutes(details.focusMinutes ?? previous.focusMinutes ?? 25, 'Suggested focus length'),
-      breakMinutes: validMinutes(details.breakMinutes ?? previous.breakMinutes ?? 10, 'Suggested break length')
+      focusMinutes,
+      breakMinutes: validMinutes(details.breakMinutes ?? previous.breakMinutes ?? defaultBreak, 'Suggested break length')
     };
   }
 
@@ -274,13 +285,19 @@ function createStore(dataFile, { now = Date.now } = {}) {
     return change(() => {
       const session = state.activeSession;
       accrue(session);
-      const finished = { ...session, status: 'completed', actualMs: Math.round(session.activeMs), completedAt: new Date(now()).toISOString() };
+      const task = session.taskId && state.tasks.find(item => item.id === session.taskId);
+      const taskAutoCompleted = session.activeMs >= session.plannedMs && task?.status === 'open';
+      const finished = { ...session, status: 'completed', actualMs: Math.round(session.activeMs), completedAt: new Date(now()).toISOString(), taskAutoCompleted };
       delete finished.segmentStartedAt;
       state.sessions.push(finished);
       state.activeSession = null;
       const kind = (session.configuredMinutes ?? session.plannedMs / 60_000) <= 25 ? 'short' : 'long';
       state.breakOffer = { kind, minutes: session.breakMinutes ?? state.breakMinutes[kind] };
       recordEvent('focus', 'focus-completed', 'completed', focusDetails(finished, finished.actualMs), finished.vaultPath);
+      if (taskAutoCompleted) {
+        task.status = 'completed';
+        eventFor(task, 'task-completed');
+      }
       return structuredClone(finished);
     });
   }
@@ -384,6 +401,7 @@ function createStore(dataFile, { now = Date.now } = {}) {
 
   function stopBreak() { return finishBreak(); }
 
+  refreshOverview();
   return { getState, selectVault, createTask, editTask, completeTask, reopenTask, deleteTask, retryPending, startFocus, stopFocus, pauseFocus, resumeFocus, finishFocus, tick, interruptFocus, setFocusMinutes, extendFocus, setBreakMinutes, startBreak, resumeBreak, finishBreak, stopBreak };
 }
 

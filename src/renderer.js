@@ -184,6 +184,7 @@ form.addEventListener('submit', async event => {
       document.querySelector('#task-description'), document.querySelector('#task-focus'), document.querySelector('#task-break')
     ));
     form.reset();
+    taskBreakCustomized = false;
     message.textContent = 'Task saved locally. Check the vault status above for logging.';
   } catch (error) {
     message.textContent = error.message;
@@ -210,6 +211,18 @@ let latestState = null;
 let focusBusy = false;
 let reportPeriod = 'day';
 let reportSignature = '';
+let promptedBreakSessionId = null;
+const breakPrompt = document.querySelector('#break-prompt');
+const taskFocusInput = document.querySelector('#task-focus');
+const taskBreakInput = document.querySelector('#task-break');
+let taskBreakCustomized = false;
+taskFocusInput.addEventListener('input', () => {
+  if (!taskBreakCustomized) {
+    const kind = Number(taskFocusInput.value) <= 25 ? 'short' : 'long';
+    taskBreakInput.value = latestState?.breakMinutes[kind] ?? (kind === 'short' ? 10 : 30);
+  }
+});
+taskBreakInput.addEventListener('input', () => { taskBreakCustomized = true; });
 
 function applySelection() {
   const task = latestState?.tasks.find(item => item.id === focusTask.value);
@@ -287,6 +300,10 @@ function renderFocus(state, updateTasks = false) {
   const previousFocus = document.querySelector('#focus-minutes').value;
   const previousBreak = document.querySelector('#session-break-minutes').value;
   latestState = state;
+  if (!taskBreakCustomized) {
+    const kind = Number(taskFocusInput.value) <= 25 ? 'short' : 'long';
+    taskBreakInput.value = state.breakMinutes[kind];
+  }
   renderReport(state);
   if (updateTasks) {
     const selected = focusTask.value;
@@ -300,7 +317,14 @@ function renderFocus(state, updateTasks = false) {
   const reminderText = document.querySelector('#break-reminder-text');
   let breakReminder = '';
   if (state.breakOffer && !state.activeBreak) {
-    breakReminder = `Focus complete. Your ${state.breakOffer.minutes}-minute break is ready when you are.`;
+    const finished = state.sessions.at(-1);
+    breakReminder = `${finished?.taskAutoCompleted ? 'Task complete!' : 'Focus complete.'} Your ${state.breakOffer.minutes}-minute break is ready when you are.`;
+    if (finished && promptedBreakSessionId !== finished.id) {
+      promptedBreakSessionId = finished.id;
+      document.querySelector('#break-prompt-title').textContent = finished.taskAutoCompleted ? 'Task complete!' : 'Focus complete!';
+      document.querySelector('#break-prompt-text').textContent = `Well done. A ${state.breakOffer.minutes}-minute break is ready. Would you like to start it now?`;
+      breakPrompt.showModal();
+    }
   } else if (session?.status === 'running') {
     const elapsed = Math.max(0, Date.now() - session.segmentStartedAt);
     const remaining = session.plannedMs - session.activeMs - elapsed;
@@ -362,15 +386,20 @@ function renderFocus(state, updateTasks = false) {
 
 async function refreshFocus() {
   if (focusBusy) return;
-  renderFocus(await window.focusDesk.getState());
+  const state = await window.focusDesk.getState();
+  if (latestState && state.sessions.length !== latestState.sessions.length) {
+    await refresh(); // Refresh task cards too when a timer completes a task in the background.
+    return;
+  }
+  renderFocus(state);
 }
 
 async function focusAction(action, success) {
   if (focusBusy) return;
   focusBusy = true;
   try {
-    await action();
-    focusMessage.textContent = success;
+    const result = await action();
+    focusMessage.textContent = typeof success === 'function' ? success(result) : success;
   } catch (error) {
     focusMessage.textContent = error.message;
   } finally {
@@ -400,7 +429,8 @@ document.querySelector('#focus-start').addEventListener('click', () => {
 document.querySelector('#focus-pause').addEventListener('click', () => focusAction(() => window.focusDesk.pauseFocus(), 'Focus paused.'));
 document.querySelector('#focus-resume').addEventListener('click', () => focusAction(() => window.focusDesk.resumeFocus(), 'Focus resumed.'));
 document.querySelector('#focus-extend').addEventListener('click', () => focusAction(() => window.focusDesk.extendFocus(), 'Added five minutes.'));
-document.querySelector('#focus-finish').addEventListener('click', () => focusAction(() => window.focusDesk.finishFocus(), 'Focus completed; the task stays open.'));
+document.querySelector('#focus-finish').addEventListener('click', () => focusAction(() => window.focusDesk.finishFocus(), result =>
+  result.taskAutoCompleted ? 'Task complete! Your break is ready.' : 'Focus session complete; the task stays open.'));
 document.querySelector('#focus-stop').addEventListener('click', () => {
   if (window.confirm('Stop and cancel this focus session? Partial time will not count in completed history.')) {
     focusAction(() => window.focusDesk.stopFocus(), 'Focus cancelled; partial time was not added to history.');
@@ -412,10 +442,19 @@ async function breakAction(action, success) {
     await action();
     document.querySelector('#break-message').textContent = success;
     await refresh();
+    return true;
   } catch (error) {
     document.querySelector('#break-message').textContent = error.message;
+    return false;
   }
 }
+document.querySelector('#break-prompt-start').addEventListener('click', async () => {
+  if (await breakAction(() => window.focusDesk.startBreak(), 'Break started.')) {
+    breakPrompt.close();
+    location.hash = 'timer';
+  }
+});
+document.querySelector('#break-prompt-later').addEventListener('click', () => breakPrompt.close());
 document.querySelector('#break-settings').addEventListener('submit', event => {
   event.preventDefault();
   breakAction(() => window.focusDesk.setBreakMinutes(

@@ -78,6 +78,11 @@ header p, .page-heading p { color: #61778e; }
 .break-reminder { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border: 1px solid #9fc5e5; border-radius: 12px; background: #e1f0fb; color: #234f75; font-weight: 600; }
 .break-reminder[hidden] { display: none; }
 .break-reminder a { color: #245780; white-space: nowrap; }
+#break-prompt { width: min(430px, calc(100% - 32px)); border: 1px solid #9fc5e5; border-radius: 18px; padding: 28px; color: #203850; box-shadow: 0 18px 50px #173d6080; }
+#break-prompt::backdrop { background: #122c4680; }
+#break-prompt h2 { font-size: 26px; margin: 0 0 10px; }
+.break-prompt-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
+#break-prompt-later { background: #e1edf7; color: #2f5f8a; }
 .section-nav a:hover, .section-nav a:focus-visible { background: #c9dfef; outline-color: #316a9c; }
 .panel { border-color: #d8e5f0; box-shadow: 0 8px 26px #244f7610; margin: 16px 0; }
 .vault-panel { padding: 14px 20px; }

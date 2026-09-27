@@ -111,6 +111,24 @@ test('configurable length auto-finishes at zero with measured time and one compl
   assert.equal(events().length, 2);
 });
 
+test('a linked task completes at zero, logs once, and offers a break', t => {
+  const { store, vault, advance, events } = setup(t);
+  const task = store.createTask('Finish reading', { focusMinutes: 1, breakMinutes: 3 });
+  store.startFocus({ taskId: task.id });
+  advance(60_000);
+  store.tick();
+  store.tick();
+  const state = store.getState();
+  assert.equal(state.tasks.find(item => item.id === task.id).status, 'completed');
+  assert.equal(state.sessions[0].taskAutoCompleted, true);
+  assert.deepEqual(state.breakOffer, { kind: 'short', minutes: 3 });
+  assert.equal(events().filter(md => md.includes('Event type: focus-completed')).length, 1);
+  const taskEvents = fs.readdirSync(path.join(vault, 'FocusDesk', 'tasks'))
+    .map(file => fs.readFileSync(path.join(vault, 'FocusDesk', 'tasks', file), 'utf8'));
+  assert.equal(taskEvents.filter(md => md.includes('Event type: task-completed')).length, 1);
+  assert.match(taskEvents.find(md => md.includes('Event type: task-completed')), new RegExp(`Task ID: ${task.id}`));
+});
+
 test('close and reopen offers Resume or Cancel without counting closed time', t => {
   const { store, data, clock, advance, events } = setup(t);
   const session = store.startFocus({ description: 'Reading' });
