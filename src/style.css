@@ -205,3 +205,40 @@ header p { font-size: 14px; margin-bottom: 6px; }
 #tasks .task-actions button:last-child:hover { background: #f5e9ed; }
 #tasks .edit-form { grid-column: 1 / -1; }
 #tasks #task-list li.empty { padding: 26px; background: #f9fcff; color: #61778e; }
+
+/* Timer: the sketch's large clock and single primary control, without phases. */
+#timer .page-heading { align-items: end; }
+#timer .timer-panel { padding: 18px 24px; }
+#timer .timer-setup { padding-bottom: 14px; border-bottom: 1px solid #dce8f2; }
+#timer .timer-setup > label { margin: 0 0 5px; font-size: 14px; }
+#timer #focus-setup select, #timer #focus-setup input { padding: 7px 10px; }
+#timer #other-activity { margin: 7px 0 12px; font-size: 14px; }
+#timer #other-activity label { margin: 7px 0 4px; }
+#timer .timer-setup .focus-settings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 0; border: 0; }
+#timer .timer-setup .focus-settings label { margin: 0; font-size: 13px; }
+#timer .timer-setup .focus-settings input { margin-top: 3px; }
+#timer .timer-stage { padding: 12px 12px 2px; text-align: center; }
+#timer #focus-label { margin: 0; font-size: 18px; color: #3a678d; }
+#timer #focus-clock { font-size: clamp(58px, 11vw, 86px); line-height: 1.12; padding: 0; margin: 5px 0; color: #285d8b; }
+#timer .focus-primary { display: flex; justify-content: center; margin: 5px 0 12px; }
+#timer .focus-primary button { min-width: 156px; font-size: 18px; font-weight: 700; }
+#timer .progress-label { display: block; margin: 0 0 4px; color: #61778e; font-size: 12px; font-weight: 600; }
+#timer #focus-progress { display: block; width: min(100%, 550px); height: 12px; margin: 0 auto 14px; overflow: hidden; border: 0; border-radius: 999px; accent-color: #5b93bf; }
+#timer #focus-progress::-webkit-progress-bar { background: #e1edf7; border-radius: 999px; }
+#timer #focus-progress::-webkit-progress-value { background: #5b93bf; border-radius: 999px; }
+#timer .focus-actions { justify-content: center; gap: 8px; }
+#timer .focus-actions button { padding: 8px 12px; background: #e1edf7; color: #285d8b; }
+#timer .focus-actions button:hover { background: #c9dfef; }
+#timer .focus-actions #focus-stop { background: #f2e8ed; color: #765d66; }
+#timer .focus-actions #focus-stop:hover { background: #e9d9e0; }
+#timer #focus-status { margin: 10px 0 0; font-size: 13px; color: #61778e; }
+#timer #focus-start-row { margin-top: 12px; }
+#timer #focus-start { min-width: 156px; font-weight: 700; }
+#timer #focus-message { min-height: 0; margin: 6px 0 0; text-align: center; font-size: 13px; }
+#timer #focus-message:empty { display: none; }
+#timer #break-clock { margin: 0 0 10px; font-size: 36px; font-variant-numeric: tabular-nums; color: #285d8b; }
+@media (max-width: 600px) {
+  #timer .page-heading { align-items: start; }
+  #timer .timer-panel { padding: 16px; }
+  #timer .focus-actions button { flex: 1 1 140px; }
+}

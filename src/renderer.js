@@ -291,6 +291,16 @@ function applySelection() {
   const breakInput = document.querySelector('#session-break-minutes');
   focus.value = task?.focusMinutes ?? latestState?.focusMinutes ?? 25;
   breakInput.value = task?.breakMinutes ?? latestState?.breakMinutes[(Number(focus.value) <= 25) ? 'short' : 'long'] ?? 10;
+  updateTimerPreview();
+}
+
+function updateTimerPreview() {
+  if (latestState?.activeSession) return;
+  const task = latestState?.tasks.find(item => item.id === focusTask.value);
+  document.querySelector('#focus-label').textContent = task?.title || focusDescription.value.trim() || 'Choose a task or activity';
+  const minutes = Number(document.querySelector('#focus-minutes').value);
+  document.querySelector('#focus-clock').textContent = minutes >= 1 && minutes <= 180 ? formatClock(minutes * 60_000) : '—:—';
+  document.querySelector('#focus-status').textContent = 'Ready when you are';
 }
 
 function formatFocusTime(ms) {
@@ -402,11 +412,13 @@ function renderFocus(state, updateTasks = false) {
   if (reminderText.textContent !== breakReminder) reminderText.textContent = breakReminder;
   document.querySelector('#focus-setup').hidden = !!session;
   document.querySelector('#focus-active').hidden = !session;
+  document.querySelector('#focus-start-row').hidden = !!session;
   updateStartAvailability();
   if (session) {
     document.querySelector('#focus-label').textContent = session.taskTitle || session.description;
     const elapsed = session.status === 'running' ? Math.max(0, Date.now() - session.segmentStartedAt) : 0;
     document.querySelector('#focus-clock').textContent = formatClock(session.plannedMs - session.activeMs - elapsed);
+    document.querySelector('#focus-progress').value = Math.max(0, Math.min(100, 100 * (session.activeMs + elapsed) / session.plannedMs));
     document.querySelector('#focus-status').textContent = session.status === 'interrupted'
       ? 'Interrupted while the app was closed. Resume or Cancel; closed time is not counted.'
       : session.status === 'paused' ? 'Paused — this time is not counted.' : 'Focusing';
@@ -415,7 +427,7 @@ function renderFocus(state, updateTasks = false) {
     document.querySelector('#focus-finish').hidden = session.status === 'interrupted';
     document.querySelector('#focus-extend').hidden = session.status === 'interrupted' || session.extended;
     document.querySelector('#focus-stop').textContent = session.status === 'interrupted' ? 'Cancel interrupted session' : 'Stop / Cancel';
-  }
+  } else updateTimerPreview();
   const history = document.querySelector('#focus-history');
   history.replaceChildren();
   for (const completed of [...state.sessions].reverse()) {
@@ -482,8 +494,10 @@ focusTask.addEventListener('change', () => {
 });
 focusDescription.addEventListener('input', () => {
   if (focusDescription.value.trim()) { focusTask.value = ''; applySelection(); }
+  updateTimerPreview();
   updateStartAvailability();
 });
+document.querySelector('#focus-minutes').addEventListener('input', updateTimerPreview);
 document.querySelector('#focus-settings').addEventListener('submit', event => event.preventDefault());
 document.querySelector('#focus-start').addEventListener('click', () => {
   if (!document.querySelector('#focus-settings').reportValidity()) return;
