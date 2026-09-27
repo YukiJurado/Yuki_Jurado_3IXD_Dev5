@@ -68,3 +68,21 @@ test('break counts down to zero, persists and excludes closed-app time', t => {
   assert.equal(reopened.getState().sessions.length, 1);
   assert.equal(reopened.getState().sessions[0].actualMs, 0);
 });
+
+test('30 minutes of focus plus an optional 10-minute break takes 40 minutes but records 30', t => {
+  const { store, clock, advance } = setup(t);
+  const startedAt = clock();
+  const task = store.createTask('Study chapter');
+  store.startFocus({ taskId: task.id, minutes: 30, breakMinutes: 10 });
+  advance(30 * 60_000);
+  store.tick();
+  assert.equal(store.getState().tasks[0].status, 'completed');
+  assert.equal(store.getState().sessions[0].actualMs, 30 * 60_000);
+  assert.deepEqual(store.getState().breakOffer, { kind: 'long', minutes: 10 });
+  store.startBreak();
+  advance(10 * 60_000);
+  store.tick();
+  assert.equal(store.getState().activeBreak, null);
+  assert.equal(store.getState().sessions[0].actualMs, 30 * 60_000);
+  assert.equal(clock() - startedAt, 40 * 60_000);
+});

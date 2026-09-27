@@ -29,9 +29,6 @@ app.whenReady().then(() => {
         notify('Break coming soon', 'Your focus session is nearly finished. Get ready for a break.');
       }
     }
-    if (!before.breakOffer && after.breakOffer) {
-      notify('Focus complete — break ready', `Your ${after.breakOffer.minutes}-minute break is ready. Open Timer to start it.`);
-    }
   }
   function focusAction(action) {
     const before = store.getState();

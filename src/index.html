@@ -13,7 +13,6 @@
   <main>
     <header><span class="eyebrow">A QUIETER WAY TO STUDY</span><h1>FocusDesk</h1><p>Plan what matters. Make room to focus.</p></header>
     <nav class="section-nav" aria-label="App pages"><a href="#tasks" data-page-link="tasks">Tasks / Home</a><a href="#timer" data-page-link="timer">Timer</a><a href="#stats" data-page-link="stats">Stats</a></nav>
-    <div id="break-reminder" class="break-reminder" role="status" hidden><span id="break-reminder-text"></span><a href="#timer">Open Timer</a></div>
     <section class="panel vault-panel" aria-label="Vault settings">
       <h2>Obsidian vault</h2>
       <p id="vault-label">Loading…</p>
@@ -40,6 +39,7 @@
     </section>
     <section class="page" id="timer" aria-label="Timer page" hidden>
       <div class="page-heading"><div><span class="eyebrow">TIME TO FOCUS</span><h2>Timer</h2><p>Set your pace, then begin.</p></div><a href="#tasks">← Tasks / Home</a></div>
+      <div id="break-reminder" class="break-reminder" role="status" hidden><span id="break-reminder-text"></span></div>
       <div class="panel timer-panel">
       <form id="focus-settings" class="focus-settings">
         <label for="focus-minutes">Focus minutes<input id="focus-minutes" type="number" min="1" max="180" step="1" required></label>

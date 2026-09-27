@@ -39,7 +39,7 @@ async function appHarness(initialState, actions) {
   return { handlers, notifications, checkpoint };
 }
 
-test('automatic focus completion announces the offered break once', async () => {
+test('automatic focus completion does not push an optional break notification', async () => {
   const running = { id: 'one', status: 'running', plannedMs: 60_000, activeMs: 59_000 };
   const harness = await appHarness({ activeSession: running, breakOffer: null }, {
     tick: state => state.activeSession
@@ -49,18 +49,17 @@ test('automatic focus completion announces the offered break once', async () => 
   });
   harness.checkpoint();
   harness.checkpoint();
-  assert.equal(harness.notifications.length, 1);
-  assert.match(harness.notifications[0].body, /10.minute break/i);
+  assert.equal(harness.notifications.length, 0);
 });
 
-test('finishing early announces the offered break', async () => {
+test('finishing early does not push an optional break notification', async () => {
   const running = { id: 'two', status: 'running', plannedMs: 25 * 60_000, activeMs: 60_000 };
   const harness = await appHarness({ activeSession: running, breakOffer: null }, {
     tick: state => state,
     finish: () => ({ activeSession: null, breakOffer: { kind: 'short', minutes: 10 } })
   });
   await harness.handlers.get('focus:finish')();
-  assert.equal(harness.notifications.length, 1);
+  assert.equal(harness.notifications.length, 0);
 });
 
 test('warns once shortly before a break after a longer focus session', async () => {

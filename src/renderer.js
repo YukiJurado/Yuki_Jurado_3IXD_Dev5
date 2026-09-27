@@ -146,8 +146,14 @@ async function refresh() {
       }),
       actionButton('Edit', () => showEditor(item, task)),
       actionButton(task.status === 'completed' ? 'Reopen' : 'Complete', async () => {
-        await (task.status === 'completed' ? window.focusDesk.reopenTask(task.id) : window.focusDesk.completeTask(task.id));
-        return task.status === 'completed' ? 'Task reopened.' : 'Task complete!';
+        if (task.status === 'completed') {
+          await window.focusDesk.reopenTask(task.id);
+          return 'Task reopened.';
+        }
+        await window.focusDesk.completeTask(task.id);
+        await refresh();
+        showCompletionPrompt({ taskTitle: task.title });
+        return null;
       }),
       actionButton('Delete', async () => {
         if (!window.confirm(`Delete “${task.title}”? The task will be removed, but its vault events will remain.`)) return null;
@@ -212,7 +218,20 @@ let focusBusy = false;
 let reportPeriod = 'day';
 let reportSignature = '';
 let promptedBreakSessionId = null;
+let breakPromptInitialized = false;
 const breakPrompt = document.querySelector('#break-prompt');
+function showCompletionPrompt({ taskTitle = null, actualMs = null, breakMinutes = null }) {
+  if (breakPrompt.open) breakPrompt.close();
+  const title = taskTitle ? 'Task complete!' : 'Focus complete!';
+  const activity = taskTitle ? `“${taskTitle}” is complete.` : 'Your focus session is complete.';
+  const duration = actualMs === null ? '' : ` You focused for ${formatFocusTime(actualMs)}.`;
+  const offer = breakMinutes === null ? '' : ` An optional ${breakMinutes}-minute break is ready.`;
+  document.querySelector('#break-prompt-title').textContent = title;
+  document.querySelector('#break-prompt-text').textContent = `${activity}${duration}${offer}`;
+  document.querySelector('#break-prompt-start').hidden = breakMinutes === null;
+  document.querySelector('#break-prompt-later').textContent = breakMinutes === null ? 'Done' : 'Later';
+  breakPrompt.showModal();
+}
 const taskFocusInput = document.querySelector('#task-focus');
 const taskBreakInput = document.querySelector('#task-break');
 let taskBreakCustomized = false;
@@ -300,6 +319,10 @@ function renderFocus(state, updateTasks = false) {
   const previousFocus = document.querySelector('#focus-minutes').value;
   const previousBreak = document.querySelector('#session-break-minutes').value;
   latestState = state;
+  if (!breakPromptInitialized) {
+    promptedBreakSessionId = state.sessions.at(-1)?.id ?? null;
+    breakPromptInitialized = true;
+  }
   if (!taskBreakCustomized) {
     const kind = Number(taskFocusInput.value) <= 25 ? 'short' : 'long';
     taskBreakInput.value = state.breakMinutes[kind];
@@ -321,9 +344,11 @@ function renderFocus(state, updateTasks = false) {
     breakReminder = `${finished?.taskAutoCompleted ? 'Task complete!' : 'Focus complete.'} Your ${state.breakOffer.minutes}-minute break is ready when you are.`;
     if (finished && promptedBreakSessionId !== finished.id) {
       promptedBreakSessionId = finished.id;
-      document.querySelector('#break-prompt-title').textContent = finished.taskAutoCompleted ? 'Task complete!' : 'Focus complete!';
-      document.querySelector('#break-prompt-text').textContent = `Well done. A ${state.breakOffer.minutes}-minute break is ready. Would you like to start it now?`;
-      breakPrompt.showModal();
+      showCompletionPrompt({
+        taskTitle: finished.taskAutoCompleted ? finished.taskTitle : null,
+        actualMs: finished.actualMs,
+        breakMinutes: state.breakOffer.minutes
+      });
     }
   } else if (session?.status === 'running') {
     const elapsed = Math.max(0, Date.now() - session.segmentStartedAt);

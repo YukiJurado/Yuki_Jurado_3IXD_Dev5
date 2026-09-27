@@ -157,7 +157,8 @@ story += [grid([
     ('Toggl Track [5]', 'One-click timing and reporting reinforced direct Start/Stop controls and actual-time summaries.', 'Background auto-tracking and agency reporting.'),
     ('Clockify [6]', 'Simple time entry and reporting showed the value of low-friction tracking.', 'GPS, kiosk, invoicing and team administration.'),
 ], [88, 248, WIDTH - 336]), Spacer(1, 12),
-          card('<b>Ideas selected:</b> a timer attached to each task; a bar chart of actual completed focus time; a small task-colour palette. '
+          card('<b>Essential features identified:</b> persistent task actions, controllable focus timing, actual-time history, and configurable breaks. '
+               '<b>Ideas selected:</b> a timer attached to each task; a bar chart of actual completed focus time; a small task-colour palette. '
                'FocusDesk is intended for one student, so team features and cloud accounts are outside the first version.'),
           Spacer(1, 6),
           para('Correction to my original research: the earlier “unlimited free users” claim for Clockify is not used as a design fact; current pricing terms can change [7].', 'CaptionX'),
@@ -166,10 +167,11 @@ story += [grid([
 # 3 — PRD
 story += section('Short product requirements document', '02  /  product')
 story += [para('<b>Purpose and user.</b> FocusDesk is for a student who needs help choosing work, staying focused, and seeing where study time went. It runs locally without an account, stores state on the computer, and writes task/focus events to a vault selected by the user.', 'BodyX'),
+          para('The Grill discussion narrowed the scope to one student, task colours, deferred grouping, task-linked focus, an optional break after focus, and a bar chart of actual time rather than estimated progress.', 'BodyX'),
           para('Core features', 'Subsection'),
           bullet('Tasks: create, view, edit, delete, complete and reopen. Tasks survive restarting the app.', True),
           bullet('Focus: choose a task or enter a short activity description; start, pause, resume, stop/cancel, finish early or complete at zero. Paused time is excluded.', True),
-          bullet('Breaks: adjustable focus and break lengths; remind the user shortly before focus ends and offer an optional break after completion. Break time is separate from actual focus time.', True),
+          bullet('Breaks: adjustable focus and break lengths; remind the user on Timer shortly before focus ends and offer an optional break in the completion popup. Break time is separate from actual focus time.', True),
           bullet('History and Stats: completed sessions and day/week/month bars of actual time per task, with description-only sessions under “Other activities.”', True),
           para('Personal features', 'Subsection'),
           para('A task can have an optional description, colour, and suggested focus/break length. A task’s Focus action opens its own Timer page. A one-time +5-minute extension is available during focus. These are chosen features, not minimum requirements.', 'BodyX'),
@@ -178,7 +180,7 @@ story += [para('<b>Purpose and user.</b> FocusDesk is for a student who needs he
           para('Main user flow', 'Subsection'),
           bullet('Select an existing Obsidian vault, then create a task on Tasks / Home.', True),
           bullet('Click Focus on a task; Timer opens with suggested lengths, which can be adjusted for that session. Alternatively start a description-only activity.', True),
-          bullet('At zero, a linked open task becomes Completed. The break prompt offers Start break or Later; Stats shows actual active time. Finishing early leaves the task open.', True),
+          bullet('At zero, a linked open task becomes Completed. A completion popup offers an optional Start break or Later choice; Stats shows actual active time. Finishing early leaves the task open.', True),
           para('Acceptance checks', 'Subsection'),
           bullet('Tasks and completed sessions persist after restart; all required actions make one appropriate Markdown event in the selected vault.', True),
           bullet('Pause and closed-app time do not increase actual duration; cancelled sessions do not enter Stats; breaks do not enter focus totals.', True),
@@ -198,9 +200,9 @@ story += [grid([
     ('Alternative not chosen', 'A Vue front end and two separate apps were considered. Plain JavaScript and one app reduce setup and integration work for this assignment.'),
 ], [122, WIDTH - 122]), Spacer(1, 15),
           para('Evidence from implementation', 'Subsection'),
-          bullet('The app passes 31 automated tests, including automatic task completion, break reminders, long-focus break suggestions and linked-vault overview checks. A fresh copy installed dependencies offline and passed all 31 tests.', True),
+          bullet('The app passes 32 automated tests, including a 30-minute focus plus 10-minute optional break, automatic task completion and linked-vault overview checks. A fresh copy passed npm ci using cached packages and all 32 tests; after Electron’s binary was installed, it launched with proxy access blocked.', True),
           bullet('An isolated Electron check used a disposable vault: task creation, task-to-Timer navigation, session overrides, completion, Stats, description-only focus, and a break worked.', True),
-          bullet('The selected real vault has 14 FocusDesk event files and no pending writes. Obsidian displays the generated Overview and event backlinks; an offline UI run after these changes remains useful before submission.', True),
+          bullet('The selected real vault contains app-generated FocusDesk event files with no pending writes. Obsidian recognizes the generated Overview and event backlinks; a final offline UI run after visual changes remains useful before submission.', True),
           para('These checks show what was exercised; they do not claim every possible timer or operating-system edge case has been manually tested.', 'CaptionX'),
           PageBreak()]
 
@@ -245,7 +247,7 @@ story += [para('These examples are from the student’s selected desktop vault a
           para('How logging works', 'Subsection'),
           bullet('Task events go to FocusDesk/tasks; focus starts, completions and cancellations go to FocusDesk/focus.', True),
           bullet('Each file name is a unique event ID. The original files remain unchanged after later edits or status changes.', True),
-          bullet('FocusDesk/Overview.md groups the 14 existing task and focus records and links to each original event; the event files remain unchanged.', True),
+          bullet('FocusDesk/Overview.md groups the existing task and focus records and links to each original event; the event files remain unchanged.', True),
           bullet('The app’s Stats chart is calculated from locally saved completed sessions; Obsidian receives event records and the linked overview, not an automatic chart note.', True),
           para('The separate submission sample, <i>Yuki_Jurado_3IXD_Dev5_Obsidiansample.md</i>, is an exact copy of a completed-focus record generated in the real vault.', 'CaptionX'),
           PageBreak()]

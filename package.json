@@ -2,7 +2,7 @@
   "name": "focusdesk",
   "version": "0.1.0",
   "private": true,
-  "description": "Offline tasks and focus desktop app (first slice)",
+  "description": "Offline tasks and focus desktop app with Obsidian event logging",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
