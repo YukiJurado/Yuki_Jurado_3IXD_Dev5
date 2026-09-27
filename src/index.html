@@ -21,19 +21,25 @@
       <button id="retry" type="button" hidden>Retry pending events</button>
     </section>
     <section class="page" id="tasks" aria-label="Tasks page">
-      <div class="page-heading"><div><span class="eyebrow">YOUR SPACE</span><h2>Tasks</h2><p>Choose a task to start a focused session.</p></div><a href="#stats">View stats →</a></div>
-      <div class="panel"><h3>Add a task</h3>
+      <div class="page-heading task-heading"><div><span class="eyebrow">YOUR SPACE</span><h2>Task List</h2></div><button id="open-task-form" type="button" aria-label="Add a task" aria-controls="task-composer" aria-expanded="false">+</button></div>
+      <div class="panel" id="task-composer" hidden><h3>Add a task</h3>
       <form id="task-form">
         <label for="task-title">Task title</label>
-        <div class="entry"><input id="task-title" name="title" maxlength="200" placeholder="e.g. Read chapter 3" required><button id="add-task" type="submit">Add task</button></div>
+        <div class="entry"><input id="task-title" name="title" maxlength="200" placeholder="e.g. Read chapter 3" required><button id="add-task" type="submit">Save task</button></div>
         <details class="optional-fields"><summary>Optional details &amp; suggested times</summary>
           <label for="task-description">Description</label><textarea id="task-description" maxlength="500" placeholder="What will you work on?"></textarea>
           <div class="field-row"><label for="task-focus">Suggested focus (minutes)<input id="task-focus" type="number" min="1" max="180" step="1" value="25" required></label>
           <label for="task-break">Suggested break (minutes)<input id="task-break" type="number" min="1" max="180" step="1" value="10" required></label></div>
         </details>
+        <button id="cancel-task-form" type="button">Cancel</button>
       </form>
+      </div>
       <p id="message" role="status"></p>
-      </div><div class="panel"><h3>Your task list</h3>
+      <div id="task-tabs" role="tablist" aria-label="Task status">
+        <button id="tab-open" type="button" role="tab" data-task-status="open" aria-selected="true" aria-controls="task-list-panel">To Do</button>
+        <button id="tab-completed" type="button" role="tab" data-task-status="completed" aria-selected="false" aria-controls="task-list-panel">Completed</button>
+      </div>
+      <div id="task-list-panel" role="tabpanel" aria-labelledby="tab-open">
       <ul id="task-list"></ul>
       </div>
     </section>

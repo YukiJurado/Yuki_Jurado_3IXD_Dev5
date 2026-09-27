@@ -4,6 +4,35 @@ const retry = document.querySelector('#retry');
 const list = document.querySelector('#task-list');
 const message = document.querySelector('#message');
 const form = document.querySelector('#task-form');
+const composer = document.querySelector('#task-composer');
+const addTaskButton = document.querySelector('#open-task-form');
+let taskFilter = 'open';
+
+function closeTaskForm() {
+  composer.hidden = true;
+  addTaskButton.setAttribute('aria-expanded', 'false');
+}
+
+addTaskButton.addEventListener('click', () => {
+  composer.hidden = false;
+  addTaskButton.setAttribute('aria-expanded', 'true');
+  document.querySelector('#task-title').focus();
+});
+document.querySelector('#cancel-task-form').addEventListener('click', closeTaskForm);
+
+for (const tab of document.querySelectorAll('#task-tabs [role="tab"]')) {
+  tab.addEventListener('click', () => {
+    taskFilter = tab.dataset.taskStatus;
+    refresh().catch(error => { message.textContent = error.message; });
+  });
+  tab.addEventListener('keydown', event => {
+    if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+    event.preventDefault();
+    const next = document.querySelector(`#task-tabs [data-task-status="${taskFilter === 'open' ? 'completed' : 'open'}"]`);
+    next.focus();
+    next.click();
+  });
+}
 
 function showPage() {
   const page = ['tasks', 'timer', 'stats'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'tasks';
@@ -114,8 +143,14 @@ async function refresh() {
   pending.hidden = retry.hidden = count === 0;
   pending.textContent = count ? `${count} event(s) pending: task saved locally, but vault logging failed. Restore the original vault and retry.` : '';
   document.querySelector('#add-task').disabled = !state.vaultPath;
+  for (const tab of document.querySelectorAll('#task-tabs [role="tab"]')) {
+    const selected = tab.dataset.taskStatus === taskFilter;
+    tab.setAttribute('aria-selected', String(selected));
+    tab.tabIndex = selected ? 0 : -1;
+  }
+  document.querySelector('#task-list-panel').setAttribute('aria-labelledby', taskFilter === 'open' ? 'tab-open' : 'tab-completed');
   list.replaceChildren();
-  for (const task of state.tasks) {
+  for (const task of state.tasks.filter(item => item.status === taskFilter)) {
     const item = document.createElement('li');
     item.dataset.taskId = task.id;
     item.className = `task-card colour-${task.colour || 'sage'}${task.status === 'completed' ? ' completed' : ''}`;
@@ -123,17 +158,21 @@ async function refresh() {
     info.className = 'task-info';
     const title = document.createElement('strong');
     title.textContent = task.title; // Never interpret a user's title as HTML.
-    const status = document.createElement('span');
-    status.textContent = task.status === 'completed' ? 'Completed' : 'Open';
-    info.append(title, status);
+    info.append(title);
     if (task.description) {
       const description = document.createElement('p');
       description.textContent = task.description;
       info.append(description);
     }
     const suggestions = document.createElement('span');
+    suggestions.className = 'task-suggestions';
     suggestions.textContent = `${task.focusMinutes ?? 25} min focus · ${task.breakMinutes ?? 10} min break`;
     info.append(suggestions);
+    const menu = document.createElement('details');
+    menu.className = 'task-menu';
+    const trigger = document.createElement('summary');
+    trigger.textContent = '•••';
+    trigger.setAttribute('aria-label', `Actions for ${task.title}`);
     const actions = document.createElement('div');
     actions.className = 'task-actions';
     actions.append(
@@ -161,13 +200,14 @@ async function refresh() {
         return 'Task deleted locally. Check vault status for logging.';
       })
     );
-    item.append(info, actions);
+    menu.append(trigger, actions);
+    item.append(info, menu);
     list.append(item);
   }
-  if (!state.tasks.length) {
+  if (!state.tasks.some(task => task.status === taskFilter)) {
     const item = document.createElement('li');
     item.className = 'empty';
-    item.textContent = 'No tasks yet. Add one above.';
+    item.textContent = taskFilter === 'open' ? 'No to-do tasks yet. Add one with +.' : 'No completed tasks yet.';
     list.append(item);
   }
   renderFocus(state, true);
@@ -191,6 +231,8 @@ form.addEventListener('submit', async event => {
     ));
     form.reset();
     taskBreakCustomized = false;
+    taskFilter = 'open';
+    closeTaskForm();
     message.textContent = 'Task saved locally. Check the vault status above for logging.';
   } catch (error) {
     message.textContent = error.message;
