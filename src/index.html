@@ -92,21 +92,24 @@
       </div>
     </section>
     <section class="page" id="stats" aria-label="Stats page" hidden>
-      <div class="page-heading"><div><span class="eyebrow">YOUR PROGRESS</span><h2>Stats</h2><p>See where your focus time went.</p></div><a href="#tasks">← Tasks / Home</a></div>
-      <div class="panel">
-      <h3>Completed focus sessions</h3>
-      <ul id="focus-history"></ul>
-      </div><div class="panel">
-      <h3>Focus time by task</h3>
-      <p class="footnote">Actual completed focus time by task. Breaks and cancelled sessions are excluded.</p>
-      <div class="report-filters" aria-label="Report period">
-        <button type="button" data-report-period="day" aria-pressed="true">Day</button>
-        <button type="button" data-report-period="week" aria-pressed="false">Week</button>
-        <button type="button" data-report-period="month" aria-pressed="false">Month</button>
+      <div class="page-heading stats-heading">
+        <div class="stats-summary"><span id="stats-mark" aria-hidden="true" hidden>✓</span><span class="eyebrow">YOUR PROGRESS</span><h2 id="stats-heading">Your progress</h2><p id="stats-subtitle">See where your focus time went.</p></div>
+        <a href="#tasks">← Tasks / Home</a>
       </div>
-      <p id="report-range"></p>
-      <p id="report-total"></p>
-      <ul id="report-bars" aria-label="Focus time bar chart"></ul>
+      <div class="panel stats-report" id="stats-report">
+        <h3>Stats</h3>
+        <p class="footnote">Actual completed focus time by task. Breaks and cancelled sessions are excluded.</p>
+        <div class="report-filters" aria-label="Report period">
+          <button type="button" data-report-period="day" aria-pressed="true">Day</button>
+          <button type="button" data-report-period="week" aria-pressed="false">Week</button>
+          <button type="button" data-report-period="month" aria-pressed="false">Month</button>
+        </div>
+        <div class="report-summary"><p id="report-range"></p><p id="report-total"></p></div>
+        <ul id="report-bars" aria-label="Focus time bar chart"></ul>
+      </div>
+      <div class="panel stats-history" id="stats-history">
+        <h3>Completed focus sessions</h3>
+        <ul id="focus-history"></ul>
       </div>
     </section>
   </main>

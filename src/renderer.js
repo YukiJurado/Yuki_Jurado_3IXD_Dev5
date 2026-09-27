@@ -314,6 +314,11 @@ function formatFocusTime(ms) {
 }
 
 function renderReport(state) {
+  const hasCompletedTask = state.tasks.some(task => task.status === 'completed');
+  document.querySelector('#stats-mark').hidden = !hasCompletedTask;
+  document.querySelector('#stats-heading').textContent = hasCompletedTask ? 'Task complete!' : 'Your progress';
+  document.querySelector('#stats-subtitle').textContent = hasCompletedTask
+    ? 'A task is marked complete. Here is your focus time.' : 'See where your focus time went.';
   const today = new Date();
   const signature = JSON.stringify([reportPeriod, today.toDateString(), state.sessions, state.tasks.map(task => [task.id, task.title, task.colour])]);
   if (signature === reportSignature) return;
@@ -432,9 +437,11 @@ function renderFocus(state, updateTasks = false) {
   history.replaceChildren();
   for (const completed of [...state.sessions].reverse()) {
     const item = document.createElement('li');
-    const label = completed.taskTitle || completed.description;
-    const duration = (completed.actualMs / 1000).toFixed(1);
-    item.textContent = `${label} — ${duration} seconds active — ${new Date(completed.completedAt).toLocaleString()}`;
+    const label = document.createElement('strong');
+    label.textContent = completed.taskTitle || completed.description;
+    const detail = document.createElement('span');
+    detail.textContent = `${formatFocusTime(completed.actualMs)} actual focus · ${new Date(completed.completedAt).toLocaleString()}`;
+    item.append(label, detail);
     history.append(item);
   }
   if (!state.sessions.length) {

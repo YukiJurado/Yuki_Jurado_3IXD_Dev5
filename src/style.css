@@ -242,3 +242,43 @@ header p { font-size: 14px; margin-bottom: 6px; }
   #timer .timer-panel { padding: 16px; }
   #timer .focus-actions button { flex: 1 1 140px; }
 }
+
+/* Stats: a real completion cue above the actual-time report, not percentages. */
+#stats .stats-heading { position: relative; display: block; padding: 12px 96px 8px; text-align: center; }
+#stats .stats-heading a { position: absolute; top: 12px; right: 4px; font-size: 14px; }
+#stats .stats-summary { display: flex; flex-direction: column; align-items: center; }
+#stats #stats-mark { display: grid; place-items: center; width: 56px; height: 56px; margin-bottom: 8px; border-radius: 50%; background: #e1edf7; color: #316a9c; font-size: 32px; font-weight: 700; }
+#stats #stats-mark[hidden] { display: none; }
+#stats .stats-heading h2 { margin: 2px 0; font-size: 32px; }
+#stats .stats-report { border-radius: 22px; padding: 22px 26px; }
+#stats .stats-report h3 { margin: 0 0 3px; font-size: 26px; }
+#stats .stats-report .footnote { margin: 0 0 14px; color: #61778e; }
+#stats .report-filters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 400px; }
+#stats .report-filters button { padding: 9px 12px; border-radius: 10px; font-weight: 700; }
+#stats .report-summary { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 14px; margin: 14px 0 4px; }
+#stats #report-range, #stats #report-total { margin: 0; }
+#stats #report-total { color: #285d8b; }
+#stats #report-bars { margin: 6px 0 0; }
+#stats #report-bars .report-row { padding: 10px 0; margin: 0; border: 0; border-bottom: 1px solid #e7eff6; border-radius: 0; gap: 5px 16px; }
+#stats #report-bars .report-row:last-child { border-bottom: 0; }
+#stats .report-row span { min-width: 0; font-weight: 600; color: #2b4b67; }
+#stats .report-row strong { color: #285d8b; }
+#stats .report-bar { height: 16px; margin: 0; overflow: hidden; border-radius: 999px; --bar-colour: #8db6ce; }
+#stats .report-bar.colour-blue { --bar-colour: #5f97c7; }
+#stats .report-bar.colour-peach { --bar-colour: #dfa688; }
+#stats .report-bar.colour-lavender { --bar-colour: #aa9bcf; }
+#stats .report-bar.colour-other { --bar-colour: #829fb7; }
+#stats .report-bar::-webkit-progress-bar { border-radius: 999px; background: #e1edf7; }
+#stats .report-bar::-webkit-progress-value { border-radius: 999px; background: var(--bar-colour); }
+#stats #report-bars .empty { padding: 18px; margin: 12px 0 0; color: #61778e; background: #f9fcff; }
+#stats .stats-history { border-radius: 18px; }
+#stats .stats-history h3 { margin: 0 0 8px; }
+#stats #focus-history { margin: 0; }
+#stats #focus-history li:not(.empty) { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; padding: 10px 0; margin: 0; border: 0; border-bottom: 1px solid #e7eff6; }
+#stats #focus-history li:last-child { border-bottom: 0; }
+#stats #focus-history li span { color: #61778e; font-size: 13px; }
+@media (max-width: 600px) {
+  #stats .stats-heading { padding: 10px 0; }
+  #stats .stats-heading a { position: static; display: inline-block; margin-top: 8px; }
+  #stats .stats-report { padding: 18px; }
+}
