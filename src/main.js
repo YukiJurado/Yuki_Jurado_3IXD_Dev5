@@ -66,7 +66,7 @@ app.whenReady().then(() => {
 
   function openWindow() {
     const window = new BrowserWindow({
-      width: 860, height: 650, minWidth: 600, minHeight: 440,
+      width: 800, height: 800, minWidth: 560, minHeight: 560,
       webPreferences: {
         preload: path.join(__dirname, 'preload.js'),
         contextIsolation: true,

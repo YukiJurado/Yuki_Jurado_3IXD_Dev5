@@ -135,3 +135,38 @@ li { border-color: #dce8f2; }
   .entry { flex-wrap: wrap; }
   .entry button { width: 100%; }
 }
+
+/* A square desktop window is the starting point; the layout still reflows when resized. */
+main { max-width: 800px; padding: 12px 24px 32px; }
+header { padding: 0 2px; }
+header h1 { font-size: 28px; margin-top: 0; }
+header p { font-size: 14px; margin-bottom: 6px; }
+.section-nav { margin-bottom: 6px; padding: 4px 0 8px; }
+.section-nav a { padding: 6px 12px; }
+.panel { padding: 16px 20px; margin: 10px 0; }
+.vault-panel { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0 14px; padding: 10px 16px; }
+.vault-panel h2, .vault-panel p, .vault-panel #pending, .vault-panel #retry { grid-column: 1; }
+.vault-panel #choose-vault { grid-column: 2; grid-row: 1 / 3; }
+.vault-panel #retry { justify-self: start; }
+.vault-panel #vault-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.page-heading { padding-top: 4px; }
+.page-heading h2 { font-size: 26px; }
+.page-heading p { font-size: 14px; }
+.task-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+.task-actions { justify-content: flex-end; max-width: 230px; }
+.timer-panel { padding: 18px 20px; }
+#focus-clock { font-size: clamp(48px, 10vw, 72px); padding: 4px; }
+@media (max-width: 700px) {
+  main { padding: 16px; }
+  .task-card { grid-template-columns: minmax(0, 1fr); }
+  .task-actions { justify-content: flex-start; max-width: none; }
+  .page-heading { align-items: start; flex-direction: column; gap: 4px; }
+}
+@media (max-width: 600px) {
+  .vault-panel { grid-template-columns: minmax(0, 1fr); }
+  .vault-panel #choose-vault { grid-column: 1; grid-row: auto; justify-self: start; }
+  .vault-panel #vault-label { overflow-wrap: anywhere; white-space: normal; }
+  .entry { flex-wrap: wrap; }
+  .entry button { width: 100%; }
+  .focus-actions button { flex: 1 1 140px; }
+}
