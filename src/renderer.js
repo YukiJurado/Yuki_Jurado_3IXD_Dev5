@@ -136,6 +136,15 @@ function showEditor(item, task) {
   title.focus();
 }
 
+function openTaskInTimer(task) {
+  for (const menu of document.querySelectorAll('#task-list .task-menu[open]')) menu.open = false;
+  document.querySelector('#focus-task').value = task.id;
+  document.querySelector('#focus-description').value = '';
+  applySelection();
+  updateStartAvailability();
+  location.hash = 'timer';
+}
+
 async function refresh() {
   const state = await window.focusDesk.getState();
   vaultLabel.textContent = state.vaultPath || 'No vault selected. Select an existing Obsidian vault to begin.';
@@ -154,13 +163,19 @@ async function refresh() {
     const item = document.createElement('li');
     item.dataset.taskId = task.id;
     item.className = `task-card colour-${task.colour || 'sage'}${task.status === 'completed' ? ' completed' : ''}`;
-    const info = document.createElement('div');
-    info.className = 'task-info';
+    item.addEventListener('click', event => {
+      if (!item.querySelector('.edit-form') && !event.target.closest('.task-menu')) openTaskInTimer(task);
+    });
+    const info = document.createElement('button');
+    info.type = 'button';
+    info.className = 'task-info task-open';
+    info.setAttribute('aria-label', `Focus on ${task.title}`);
     const title = document.createElement('strong');
     title.textContent = task.title; // Never interpret a user's title as HTML.
     info.append(title);
     if (task.description) {
-      const description = document.createElement('p');
+      const description = document.createElement('span');
+      description.className = 'task-description';
       description.textContent = task.description;
       info.append(description);
     }
@@ -176,13 +191,7 @@ async function refresh() {
     const actions = document.createElement('div');
     actions.className = 'task-actions';
     actions.append(
-      actionButton('Focus', () => {
-        document.querySelector('#focus-task').value = task.id;
-        document.querySelector('#focus-description').value = '';
-        applySelection();
-        updateStartAvailability();
-        location.hash = 'timer';
-      }),
+      actionButton('Focus', () => openTaskInTimer(task)),
       actionButton('Edit', () => showEditor(item, task)),
       actionButton(task.status === 'completed' ? 'Reopen' : 'Complete', async () => {
         if (task.status === 'completed') {
