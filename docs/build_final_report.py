@@ -14,7 +14,7 @@ from reportlab.platypus import (
 )
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / 'submission' / 'Yuki_Jevelle_Jurado_3IXD_Dev5_PRD.PDF'
+OUT = Path.home() / 'Desktop' / 'DevAssignment-1-Submission' / 'Yuki_Jevelle_Jurado_3IXD_Dev5_PRD.PDF'
 OUT.parent.mkdir(exist_ok=True)
 
 NAVY = colors.HexColor('#203850')
@@ -130,7 +130,7 @@ story += [Spacer(1, 62), para('3IXD  /  DEVELOPMENT 5  /  ASSIGNMENT 1', 'CoverE
           Spacer(1, 30)]
 story += [para('<b>Student</b>  Yuki Jevelle Jurado', 'BodyX'),
           para('<b>Class</b>  3IXD', 'BodyX'),
-          para('<b>Date</b>  27 September 2026', 'BodyX'),
+          para('<b>Date</b>  28 September 2026', 'BodyX'),
           para('<b>Repository</b>  <link href="https://github.com/YukiJurado/DevAssignment-1" color="#316a9c">github.com/YukiJurado/DevAssignment-1</link>', 'BodyX'),
           Spacer(1, 24), para('What this report includes', 'Subsection'),
           bullet('Research of three task apps and three timer/tracking apps; the resulting product choices.', True),
@@ -147,7 +147,7 @@ story += [para('The judgments below come from my supplied <i>App Research–Assi
 story += [grid([
     ('Application', 'Useful observation and what I took from it', 'Left out of FocusDesk'),
     ('Todoist [1]', 'A friendly, structured task list suggested clear task cards and easy entry.', 'Collaboration and multi-user assignment.'),
-    ('Microsoft To Do [2]', 'Simple lists and list groups suggested keeping organization understandable. Grouping was deferred in v1.', 'Outlook/Microsoft account integration.'),
+    ('Microsoft To Do [2]', 'Simple lists and list groups suggested keeping organization understandable. FocusDesk later added optional subject groups for tasks.', 'Outlook/Microsoft account integration.'),
     ('TickTick [3]', 'Its task-plus-Pomodoro pattern supported combining both functions in one app.', 'Habit tracking, calendar suite and collaboration.'),
 ], [88, 248, WIDTH - 336]), Spacer(1, 14)]
 story += section('Research: timer and tracking applications')
@@ -167,18 +167,22 @@ story += [grid([
 # 3 — PRD
 story += section('Short product requirements document', '02  /  product')
 story += [para('<b>Purpose and user.</b> FocusDesk is for a student who needs help choosing work, staying focused, and seeing where study time went. It runs locally without an account, stores state on the computer, and writes task/focus events to a vault selected by the user.', 'BodyX'),
-          para('The Grill discussion narrowed the scope to one student, task colours, deferred grouping, task-linked focus, an optional break after focus, and a bar chart of actual time rather than estimated progress.', 'BodyX'),
+          para('The Grill discussion narrowed the initial scope to one student, task colours, task-linked focus, an optional break, and a bar chart of actual time. Later feedback added optional subject groups and a separate Obsidian settings page.', 'BodyX'),
+          para('Grill session outcomes', 'Subsection'),
+          bullet('I chose a solo student as the user and one combined desktop app. Tasks would start ungrouped; I later added optional subject groups for six classes.', True),
+          bullet('I chose automatic focus and linked-task completion at zero, an optional break rather than a forced one, and a 30-minute focus plus 10-minute break example.', True),
+          bullet('I chose a bar chart of actual focused minutes by task for day, week and month, instead of estimated task-completion percentages.', True),
           para('Core features', 'Subsection'),
-          bullet('Tasks: create, view, edit, delete, complete and reopen. Tasks survive restarting the app.', True),
+          bullet('Tasks: create, view, edit, delete, complete and reopen. Tasks and optional user-named groups survive restarting the app; All and group filters work with To Do/Completed.', True),
           bullet('Focus: choose a task or enter a short activity description; start, pause, resume, stop/cancel, finish early or complete at zero. Paused time is excluded.', True),
           bullet('Breaks: adjustable focus and break lengths; remind the user on Timer shortly before focus ends and offer an optional break in the completion popup. Break time is separate from actual focus time.', True),
           bullet('History and Stats: completed sessions and day/week/month bars of actual time per task, with description-only sessions under “Other activities.”', True),
           para('Personal features', 'Subsection'),
           para('A task can have an optional description, colour, and suggested focus/break length. A task’s Focus action opens its own Timer page. A one-time +5-minute extension is available during focus. These are chosen features, not minimum requirements.', 'BodyX'),
           para('Non-goals', 'Subsection'),
-          para('Accounts, cloud sync, collaboration, calendar planning, task groups, automatic background tracking, and billing are outside this version.', 'BodyX'),
+          para('Accounts, cloud sync, collaboration, calendar planning, automatic background tracking, and billing are outside this version.', 'BodyX'),
           para('Main user flow', 'Subsection'),
-          bullet('Select an existing Obsidian vault, then create a task on Tasks / Home.', True),
+          bullet('Select an existing Obsidian vault on the Obsidian page. On Tasks, optionally create subject groups with +, choose a group filter, and add a task with an optional group.', True),
           bullet('Click Focus on a task; Timer opens with suggested lengths, which can be adjusted for that session. Alternatively start a description-only activity.', True),
           bullet('At zero, a linked open task becomes Completed. A completion popup offers an optional Start break or Later choice; Stats shows actual active time. Finishing early leaves the task open.', True),
           para('Acceptance checks', 'Subsection'),
@@ -191,18 +195,18 @@ story += [para('<b>Purpose and user.</b> FocusDesk is for a student who needs he
 story += section('Design and technical decisions', '03  /  implementation')
 story += [grid([
     ('Decision', 'Choice and reason'),
-    ('One combined app', 'Tasks, Timer and Stats are separate pages in one Electron window and one repository. A task can open its focus session directly.'),
+    ('One combined app', 'Tasks, Timer, Stats and Obsidian settings are separate pages in one Electron window and one repository. A task can open its focus session directly.'),
     ('Electron + plain JS', 'HTML, CSS and JavaScript were already familiar from class; Electron provides desktop file and folder access without a remote service.'),
     ('Local state', 'Task, session, setting and pending-event data live in an app-owned JSON file, saved on meaningful changes.'),
     ('Obsidian records', 'FocusDesk/tasks and FocusDesk/focus contain one uniquely named Markdown file per event. Records include date, time, timezone, type, status and identifiers. A failed write stays pending for retry. A generated Overview links records by task without changing them.'),
-    ('Three-page layout', 'Tasks is home; task Focus opens Timer; Stats houses history and the bar chart. Blue surfaces and task-colour accents keep the interface calm and scannable.'),
+    ('Four-page layout', 'Tasks is home, task Focus opens Timer, Stats houses history and the chart, and Obsidian contains vault controls. Pastel blue surfaces, Indie Flower text and task-colour accents follow the final visual direction.'),
     ('Usability', 'Stop warns about cancellation; Finish saves active time. Optional task suggestions provide a starting value without turning them into an estimate of actual time.'),
     ('Alternative not chosen', 'A Vue front end and two separate apps were considered. Plain JavaScript and one app reduce setup and integration work for this assignment.'),
 ], [122, WIDTH - 122]), Spacer(1, 15),
           para('Evidence from implementation', 'Subsection'),
-          bullet('The app passes 32 automated tests, including a 30-minute focus plus 10-minute optional break, automatic task completion and linked-vault overview checks. A fresh copy passed npm ci using cached packages and all 32 tests; after Electron’s binary was installed, it launched with proxy access blocked.', True),
+          bullet('The finished app passes 38 automated tests, including a 30-minute focus plus 10-minute optional break, automatic task completion, task groups and linked-vault overview checks. An earlier fresh-copy check passed npm ci and all 32 tests present at that stage; the Electron app launched with proxy access blocked.', True),
           bullet('An isolated Electron check used a disposable vault: task creation, task-to-Timer navigation, session overrides, completion, Stats, description-only focus, and a break worked.', True),
-          bullet('The selected real vault contains app-generated FocusDesk event files with no pending writes. Obsidian recognizes the generated Overview and event backlinks; a final offline UI run after visual changes remains useful before submission.', True),
+          bullet('The selected real vault contains app-generated FocusDesk event files and a linked Overview. Isolated Electron checks exercised six subject groups, combined status/group filters, persisted assignments, and named group fields in new vault events. The native vault picker and final design on the student’s machine still need a short manual check.', True),
           para('These checks show what was exercised; they do not claim every possible timer or operating-system edge case has been manually tested.', 'CaptionX'),
           PageBreak()]
 
@@ -224,7 +228,7 @@ def visual_page(number, title, sketch_name, decision, change, app_note):
 
 story += visual_page(1, 'Tasks / Home', 'Task-List-Sketch.png',
     'The large add action and individual task cards made the task list easy to scan. Each card needed a direct way to begin focusing.',
-    'The sketch explored groups, dates and estimated hours. Those were dropped for v1. The implemented page keeps title, optional description, colour, suggested focus/break times and a Focus button.',
+    'The sketch explored groups, dates and estimated hours. Subject groups were later added as optional filters; date and estimated-hour fields were left out. The implemented cards keep title, optional description, colour, suggested times and a Focus button.',
     '<b>Result:</b> Tasks became the home page; the blue desktop layout separates adding from reviewing existing tasks.')
 story += visual_page(2, 'Timer and breaks', 'Timer-Sketch.png',
     'A large countdown should be the visual centre. The drawing also suggested obvious pause and break controls.',
@@ -245,7 +249,7 @@ story += [para('These examples are from the student’s selected desktop vault a
           card('<font name="Courier" size="8">Event type: focus-completed<br/>Status: completed<br/>Date: 2026-09-26<br/>Time: 16:46:09<br/>Timezone: Europe/Brussels (UTC+02:00)<br/>Task title: Test-Read Book 3<br/>Planned minutes: 1<br/>Actual active duration: 60000 ms</font>', PAPER),
           Spacer(1, 15),
           para('How logging works', 'Subsection'),
-          bullet('Task events go to FocusDesk/tasks; focus starts, completions and cancellations go to FocusDesk/focus.', True),
+          bullet('Task events go to FocusDesk/tasks; focus starts, completions and cancellations go to FocusDesk/focus. New task events include the optional subject group name; groups themselves are saved locally.', True),
           bullet('Each file name is a unique event ID. The original files remain unchanged after later edits or status changes.', True),
           bullet('FocusDesk/Overview.md groups the existing task and focus records and links to each original event; the event files remain unchanged.', True),
           bullet('The app’s Stats chart is calculated from locally saved completed sessions; Obsidian receives event records and the linked overview, not an automatic chart note.', True),
@@ -259,9 +263,9 @@ story += [para('AI note', 'Subsection'),
           para('Personal reflection', 'Subsection'),
           card('“The most challenging part was connecting Codex with Hermes and keeping the files together so Obsidian could use them. I learned that Electron can run a local desktop app for a project like this.”<br/><br/>— Yuki Jevelle Jurado', PALE),
           Spacer(1, 13),
-          para('Before final submission', 'Subsection'),
-          bullet('Run the updated app once without internet, then create a short real-vault session and check that its events appear in the Overview.', True),
-          bullet('Submit the prepared app-generated .md sample separately using the brief’s required filename.', True),
+          para('Verification boundary', 'Subsection'),
+          bullet('Automated and isolated Electron checks cover core workflows; native folder selection and the final visual design should also be checked in the student’s own installation.', True),
+          bullet('The separately submitted .md sample is copied from a real app-generated focus event, not written for the report.', True),
           para('Sources', 'Subsection'),
           para('Student source: <i>App Research-Assignment 1.pdf</i> (Yuki Jevelle Jurado). Assignment source: <i>3IXD_Dev5_Assignment_1.pdf</i>. Product pages checked 27 September 2026; vendors may change features and pricing.', 'SmallX')]
 sources = [
