@@ -200,11 +200,13 @@ async function refresh() {
     info.setAttribute('aria-label', task.status === 'completed' ? `Make ${task.title} available again` : `Focus on ${task.title}`);
     const title = document.createElement('strong');
     title.textContent = task.title; // Never interpret a user's title as HTML.
+    title.title = task.title; // Keep a clipped notebook title available on hover.
     info.append(title);
     if (task.description) {
       const description = document.createElement('span');
       description.className = 'task-description';
       description.textContent = task.description;
+      description.title = task.description;
       info.append(description);
     }
     const suggestions = document.createElement('span');
