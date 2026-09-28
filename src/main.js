@@ -42,6 +42,7 @@ app.whenReady().then(() => {
     if (result.canceled) return store.getState();
     return store.selectVault(result.filePaths[0]);
   });
+  ipcMain.handle('group:create', (_event, name) => store.createGroup(name));
   ipcMain.handle('task:create', (_event, title, details) => store.createTask(title, details));
   ipcMain.handle('task:edit', (_event, id, title, colour, details) => store.editTask(id, title, colour, details));
   ipcMain.handle('task:complete', (_event, id) => store.completeTask(id));

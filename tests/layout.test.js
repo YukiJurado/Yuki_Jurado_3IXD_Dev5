@@ -40,3 +40,16 @@ test('Timer and Stats retain their headings without introductory descriptions', 
   assert.doesNotMatch(stats, /id="stats-subtitle"|See where your focus time went\./);
   assert.doesNotMatch(renderer, /#stats-subtitle/);
 });
+
+test('Tasks offers a group form, an ungrouped task choice, and independent group filters', () => {
+  const tasks = html.match(/<section class="page" id="tasks"[\s\S]*?<\/section>/)?.[0];
+  assert.ok(tasks);
+  for (const id of ['open-group-form', 'group-form', 'group-name', 'task-group', 'group-filters', 'task-tabs']) {
+    assert.match(tasks, new RegExp(`id="${id}"`));
+  }
+  assert.match(tasks, /Add a new group/);
+  assert.match(tasks, /Add to a group/);
+  assert.match(tasks, /<option value="">Ungrouped<\/option>/);
+  assert.match(tasks, /data-group-filter="all"/);
+  assert.match(renderer, /createGroup/);
+});

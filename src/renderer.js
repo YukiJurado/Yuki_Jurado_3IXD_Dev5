@@ -8,7 +8,12 @@ const message = document.querySelector('#message');
 const form = document.querySelector('#task-form');
 const composer = document.querySelector('#task-composer');
 const addTaskButton = document.querySelector('#open-task-form');
+const groupForm = document.querySelector('#group-form');
+const groupFormButton = document.querySelector('#open-group-form');
+const groupFilters = document.querySelector('#group-filters');
 let taskFilter = 'open';
+let groupFilter = 'all';
+let groupFiltersSignature = '';
 
 function closeTaskForm() {
   composer.hidden = true;
@@ -18,9 +23,38 @@ function closeTaskForm() {
 addTaskButton.addEventListener('click', () => {
   composer.hidden = false;
   addTaskButton.setAttribute('aria-expanded', 'true');
+  document.querySelector('#task-group').value = groupFilter === 'all' ? '' : groupFilter;
   document.querySelector('#task-title').focus();
 });
 document.querySelector('#cancel-task-form').addEventListener('click', closeTaskForm);
+
+function closeGroupForm() {
+  groupForm.hidden = true;
+  groupFormButton.setAttribute('aria-expanded', 'false');
+}
+groupFormButton.addEventListener('click', () => {
+  groupForm.hidden = false;
+  groupFormButton.setAttribute('aria-expanded', 'true');
+  document.querySelector('#group-name').focus();
+});
+document.querySelector('#cancel-group-form').addEventListener('click', closeGroupForm);
+groupForm.addEventListener('submit', async event => {
+  event.preventDefault();
+  const saveButton = groupForm.querySelector('[type="submit"]');
+  saveButton.disabled = true;
+  try {
+    const group = await window.focusDesk.createGroup(document.querySelector('#group-name').value);
+    groupFilter = group.id;
+    groupForm.reset();
+    closeGroupForm();
+    message.textContent = `Group “${group.name}” saved locally.`;
+    await refresh();
+  } catch (error) {
+    message.textContent = error.message;
+  } finally {
+    saveButton.disabled = false;
+  }
+});
 
 for (const tab of document.querySelectorAll('#task-tabs [role="tab"]')) {
   tab.addEventListener('click', () => {
@@ -48,8 +82,13 @@ function showPage() {
 window.addEventListener('hashchange', showPage);
 showPage();
 
-function detailsFrom(description, focus, breakInput) {
-  return { description: description.value, focusMinutes: Number(focus.value), breakMinutes: Number(breakInput.value) };
+function detailsFrom(description, focus, breakInput, group) {
+  return { description: description.value, focusMinutes: Number(focus.value), breakMinutes: Number(breakInput.value), groupId: group.value || null };
+}
+
+function groupOptions(groups) {
+  const ungrouped = new Option('Ungrouped', '');
+  return [ungrouped, ...groups.map(group => new Option(group.name, group.id))];
 }
 
 function actionButton(label, action) {
@@ -73,7 +112,7 @@ function actionButton(label, action) {
   return button;
 }
 
-function showEditor(item, task) {
+function showEditor(item, task, groups) {
   const editor = document.createElement('form');
   editor.className = 'edit-form';
   const titleLabel = document.createElement('label');
@@ -96,6 +135,12 @@ function showEditor(item, task) {
   }
   colour.value = task.colour || 'sage';
   colourLabel.append(colour);
+  const groupLabel = document.createElement('label');
+  groupLabel.textContent = 'Add to a group';
+  const group = document.createElement('select');
+  group.append(...groupOptions(groups));
+  group.value = task.groupId ?? '';
+  groupLabel.append(group);
   const descriptionLabel = document.createElement('label');
   descriptionLabel.textContent = 'Description (optional)';
   const description = document.createElement('textarea');
@@ -121,12 +166,12 @@ function showEditor(item, task) {
   cancel.type = 'button';
   cancel.textContent = 'Cancel';
   cancel.addEventListener('click', () => refresh().catch(error => { message.textContent = error.message; }));
-  editor.append(titleLabel, colourLabel, descriptionLabel, focusLabel, breakLabel, save, cancel);
+  editor.append(titleLabel, colourLabel, groupLabel, descriptionLabel, focusLabel, breakLabel, save, cancel);
   editor.addEventListener('submit', async event => {
     event.preventDefault();
     save.disabled = true;
     try {
-      await window.focusDesk.editTask(task.id, title.value, colour.value, detailsFrom(description, focus, breakInput));
+      await window.focusDesk.editTask(task.id, title.value, colour.value, detailsFrom(description, focus, breakInput, group));
       message.textContent = 'Changes saved locally. See Obsidian for vault logging.';
       await refresh();
     } catch (error) {
@@ -185,9 +230,36 @@ function renderVaultStatus(state) {
   pending.textContent = count ? `${count} event(s) pending: saved locally, but vault logging failed. Restore the original vault and retry.` : '';
 }
 
+function renderGroupControls(groups) {
+  const selected = document.querySelector('#task-group');
+  const currentChoice = selected.value;
+  selected.replaceChildren(...groupOptions(groups));
+  selected.value = currentChoice;
+  const signature = JSON.stringify(groups);
+  if (signature !== groupFiltersSignature) {
+    groupFiltersSignature = signature;
+    const buttons = [{ id: 'all', name: 'All' }, ...groups];
+    groupFilters.replaceChildren(...buttons.map(group => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.dataset.groupFilter = group.id;
+      button.textContent = group.name;
+      button.addEventListener('click', () => {
+        groupFilter = group.id;
+        refresh().catch(error => { message.textContent = error.message; });
+      });
+      return button;
+    }));
+  }
+  for (const button of groupFilters.querySelectorAll('button')) {
+    button.setAttribute('aria-pressed', String(button.dataset.groupFilter === groupFilter));
+  }
+}
+
 async function refresh() {
   const state = await window.focusDesk.getState();
   renderVaultStatus(state);
+  renderGroupControls(state.groups);
   document.querySelector('#add-task').disabled = !state.vaultPath;
   for (const tab of document.querySelectorAll('#task-tabs [role="tab"]')) {
     const selected = tab.dataset.taskStatus === taskFilter;
@@ -196,7 +268,8 @@ async function refresh() {
   }
   document.querySelector('#task-list-panel').setAttribute('aria-labelledby', taskFilter === 'open' ? 'tab-open' : 'tab-completed');
   list.replaceChildren();
-  for (const task of state.tasks.filter(item => item.status === taskFilter)) {
+  const shownTasks = state.tasks.filter(item => item.status === taskFilter && (groupFilter === 'all' || (item.groupId ?? null) === groupFilter));
+  for (const task of shownTasks) {
     const item = document.createElement('li');
     item.dataset.taskId = task.id;
     item.className = `task-card colour-${task.colour || 'sage'}${task.status === 'completed' ? ' completed' : ''}`;
@@ -231,7 +304,7 @@ async function refresh() {
     actions.className = 'task-actions';
     actions.append(
       actionButton('Focus', () => openTaskInTimer(task)),
-      actionButton('Edit', () => showEditor(item, task)),
+      actionButton('Edit', () => showEditor(item, task, state.groups)),
       actionButton(task.status === 'completed' ? 'Reopen' : 'Complete', async () => {
         if (task.status === 'completed') {
           await window.focusDesk.reopenTask(task.id);
@@ -252,10 +325,12 @@ async function refresh() {
     item.append(info, menu);
     list.append(item);
   }
-  if (!state.tasks.some(task => task.status === taskFilter)) {
+  if (!shownTasks.length) {
     const item = document.createElement('li');
     item.className = 'empty';
-    item.textContent = taskFilter === 'open' ? 'No to-do tasks yet. Add one with +.' : 'No completed tasks yet.';
+    item.textContent = groupFilter === 'all'
+      ? (taskFilter === 'open' ? 'No to-do tasks yet. Add one with +.' : 'No completed tasks yet.')
+      : (taskFilter === 'open' ? 'No to-do tasks in this group.' : 'No completed tasks in this group.');
     list.append(item);
   }
   renderFocus(state, true);
@@ -275,11 +350,12 @@ form.addEventListener('submit', async event => {
   event.preventDefault();
   try {
     await window.focusDesk.createTask(form.elements.title.value, detailsFrom(
-      document.querySelector('#task-description'), document.querySelector('#task-focus'), document.querySelector('#task-break')
+      document.querySelector('#task-description'), document.querySelector('#task-focus'), document.querySelector('#task-break'), document.querySelector('#task-group')
     ));
     form.reset();
     taskBreakCustomized = false;
     taskFilter = 'open';
+    groupFilter = 'all';
     closeTaskForm();
     message.textContent = 'Task saved locally. See Obsidian for vault logging.';
   } catch (error) {

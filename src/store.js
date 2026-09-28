@@ -9,6 +9,7 @@ function createStore(dataFile, { now = Date.now } = {}) {
   let state = fs.existsSync(dataFile)
     ? JSON.parse(fs.readFileSync(dataFile, 'utf8'))
     : { vaultPath: null, tasks: [], pendingEvents: [] };
+  state.groups ??= []; // Older state files have no groups; their tasks remain ungrouped.
   state.focusMinutes ??= 25;
   state.sessions ??= [];
   state.activeSession ??= null;
@@ -105,8 +106,9 @@ function createStore(dataFile, { now = Date.now } = {}) {
   }
 
   function eventFor(task, type, previous) {
-    const before = previous ? `- Previous title: ${previous.title}\n- Previous colour: ${previous.colour || 'sage'}\n` : '';
-    recordEvent('tasks', type, task.status, `- Task ID: ${task.id}\n${before}- Title: ${task.title}\n- Colour: ${task.colour || 'sage'}\n- Description: ${task.description || ''}\n- Suggested focus minutes: ${task.focusMinutes ?? 25}\n- Suggested break minutes: ${task.breakMinutes ?? 10}\n`);
+    const groupName = groupId => state.groups.find(group => group.id === groupId)?.name || 'Ungrouped';
+    const before = previous ? `- Previous title: ${previous.title}\n- Previous colour: ${previous.colour || 'sage'}\n- Previous group: ${groupName(previous.groupId)}\n` : '';
+    recordEvent('tasks', type, task.status, `- Task ID: ${task.id}\n${before}- Title: ${task.title}\n- Colour: ${task.colour || 'sage'}\n- Group: ${groupName(task.groupId)}\n- Description: ${task.description || ''}\n- Suggested focus minutes: ${task.focusMinutes ?? 25}\n- Suggested break minutes: ${task.breakMinutes ?? 10}\n`);
   }
 
   function validTitle(title) {
@@ -114,6 +116,21 @@ function createStore(dataFile, { now = Date.now } = {}) {
     const cleaned = title.trim().replace(/\s+/g, ' ');
     if (cleaned.length > 200) throw new Error('Task title must be 200 characters or fewer.');
     return cleaned;
+  }
+
+  function createGroup(name) {
+    if (typeof name !== 'string' || !name.trim()) throw new Error('Enter a group name.');
+    const cleaned = name.trim().replace(/\s+/g, ' ');
+    if (cleaned.length > 60) throw new Error('Group name must be 60 characters or fewer.');
+    if (state.groups.some(group => group.name.toLocaleLowerCase() === cleaned.toLocaleLowerCase())) {
+      throw new Error('A group with that name already exists.');
+    }
+    return change(() => {
+      const group = { id: randomUUID(), name: cleaned };
+      state.groups.push(group);
+      save();
+      return structuredClone(group);
+    });
   }
 
   function validMinutes(value, label) {
@@ -124,10 +141,13 @@ function createStore(dataFile, { now = Date.now } = {}) {
   function taskDetails(details = {}, previous = {}) {
     const description = details.description ?? previous.description ?? '';
     if (typeof description !== 'string' || description.length > 500) throw new Error('Description must be 500 characters or fewer.');
+    const groupId = details.groupId === undefined ? previous.groupId ?? null : details.groupId;
+    if (groupId !== null && !state.groups.some(group => group.id === groupId)) throw new Error('Choose an existing group or leave the task ungrouped.');
     const focusMinutes = validMinutes(details.focusMinutes ?? previous.focusMinutes ?? 25, 'Suggested focus length');
     const defaultBreak = focusMinutes <= 25 ? state.breakMinutes.short : state.breakMinutes.long;
     return {
       description: description.trim(),
+      groupId,
       focusMinutes,
       breakMinutes: validMinutes(details.breakMinutes ?? previous.breakMinutes ?? defaultBreak, 'Suggested break length')
     };
@@ -163,7 +183,7 @@ function createStore(dataFile, { now = Date.now } = {}) {
     if (!COLOURS.includes(colour)) throw new Error('Choose a valid task colour.');
     const options = details === undefined ? null : taskDetails(details, task);
     if (task.title === nextTitle && (task.colour || 'sage') === colour &&
-      (!options || (task.description || '') === options.description && (task.focusMinutes ?? 25) === options.focusMinutes && (task.breakMinutes ?? 10) === options.breakMinutes)) return structuredClone(task);
+      (!options || (task.description || '') === options.description && (task.groupId ?? null) === options.groupId && (task.focusMinutes ?? 25) === options.focusMinutes && (task.breakMinutes ?? 10) === options.breakMinutes)) return structuredClone(task);
     const previous = { ...task };
     return change(() => {
       task.title = nextTitle;
@@ -402,7 +422,7 @@ function createStore(dataFile, { now = Date.now } = {}) {
   function stopBreak() { return finishBreak(); }
 
   refreshOverview();
-  return { getState, selectVault, createTask, editTask, completeTask, reopenTask, deleteTask, retryPending, startFocus, stopFocus, pauseFocus, resumeFocus, finishFocus, tick, interruptFocus, setFocusMinutes, extendFocus, setBreakMinutes, startBreak, resumeBreak, finishBreak, stopBreak };
+  return { getState, selectVault, createGroup, createTask, editTask, completeTask, reopenTask, deleteTask, retryPending, startFocus, stopFocus, pauseFocus, resumeFocus, finishFocus, tick, interruptFocus, setFocusMinutes, extendFocus, setBreakMinutes, startBreak, resumeBreak, finishBreak, stopBreak };
 }
 
 module.exports = { createStore };
