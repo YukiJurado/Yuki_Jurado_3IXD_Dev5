@@ -1,4 +1,11 @@
-:root { color-scheme: light; font: 16px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #233040; background: #f5f6f5; }
+@font-face {
+  font-family: 'Indie Flower';
+  src: url('assets/fonts/IndieFlower-Regular.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+:root { color-scheme: light; font: 19px/1.35 'Indie Flower', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #233040; background: #f5f6f5; }
 * { box-sizing: border-box; }
 body { margin: 0; }
 main { max-width: 760px; margin: 0 auto; padding: 36px 24px 52px; }
@@ -82,7 +89,7 @@ li.empty { color: #738078; border-style: dashed; }
 main { max-width: 980px; padding: 32px 28px 64px; }
 header { padding: 16px 4px 8px; }
 header p, .page-heading p { color: var(--muted-ink); }
-.eyebrow { color: var(--muted-ink); }
+.eyebrow { color: var(--muted-ink); font-size: 14px; letter-spacing: .1em; }
 .section-nav { border-bottom: 1px solid var(--secondary-blue); padding: 6px 0 18px; margin-bottom: 18px; }
 .section-nav { position: sticky; top: 0; z-index: 2; background: var(--sky); }
 .section-nav a, .report-filters button { background: var(--primary-surface); color: var(--ink); }
@@ -106,15 +113,16 @@ header p, .page-heading p { color: var(--muted-ink); }
 .section-nav a[aria-current="page"]:hover, .section-nav a[aria-current="page"]:focus-visible { background: var(--action-hover); color: white; }
 .panel { background: var(--soft-surface); border-color: var(--secondary-blue); box-shadow: 0 8px 26px #244f7618; margin: 16px 0; }
 .vault-panel { padding: 14px 20px; background: var(--primary-surface); }
-.vault-panel h2 { font-size: 15px; margin: 0; }
-.vault-panel p { margin: 4px 0; font-size: 13px; }
-.vault-panel button { padding: 6px 12px; font-size: 13px; }
+.vault-panel h2 { font-size: 19px; margin: 0; }
+.vault-panel p { margin: 4px 0; font-size: 16px; }
+.vault-panel button { padding: 6px 12px; font-size: 16px; }
 #vault-label, .footnote, #focus-message, #message, li.empty { color: var(--muted-ink); }
 #pending { background: var(--paper); color: var(--ink); }
 button { background: var(--action); color: white; }
 button:hover { background: var(--action-hover); color: white; }
 button:disabled { background: var(--secondary-blue); color: var(--ink); }
-input, textarea, select { border-color: var(--secondary-blue); background: var(--paper); color: var(--ink); }
+input, textarea, select { border-color: var(--secondary-blue); background: var(--paper); color: var(--ink); font: inherit; }
+dialog { font: inherit; }
 .edit-form input, .edit-form select, #focus-setup select, #focus-setup input { border-color: var(--secondary-blue); }
 input:focus, textarea:focus, select:focus, button:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 textarea { display: block; width: 100%; min-height: 76px; padding: 10px 12px; border: 1px solid var(--secondary-blue); border-radius: 9px; font: inherit; resize: vertical; }
@@ -163,9 +171,9 @@ li { border-color: var(--secondary-blue); }
 main { max-width: 800px; padding: 12px 24px 32px; }
 header { padding: 0 2px; }
 header h1 { font-size: 28px; margin-top: 0; }
-header p { font-size: 14px; margin-bottom: 6px; }
+header p { font-size: 17px; margin-bottom: 6px; }
 .section-nav { margin-bottom: 6px; padding: 4px 0 8px; }
-.section-nav a { padding: 6px 12px; }
+.section-nav a { padding: 6px 12px; font-size: 19px; line-height: 1.25; }
 .panel { padding: 16px 20px; margin: 10px 0; }
 .vault-panel { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0 14px; padding: 10px 16px; }
 .vault-panel h2, .vault-panel p, .vault-panel #pending, .vault-panel #retry { grid-column: 1; }
@@ -219,15 +227,15 @@ header p { font-size: 14px; margin-bottom: 6px; }
 #tasks .task-card.colour-lavender { --notebook-edge: #af9bd3; }
 #tasks .task-card.completed { background-color: #f6f3e8; background-image: repeating-linear-gradient(to bottom, transparent 0 27px, #99c3e488 28px, transparent 29px); border-color: var(--secondary-blue); border-left-color: var(--notebook-edge); }
 #tasks .task-card:has(.task-menu[open]) { z-index: 1; }
-#tasks .task-info { gap: 5px; }
-#tasks .task-open { display: flex; flex-direction: column; width: 100%; height: 100%; min-width: 0; padding: 30px 0 0; background: transparent; color: inherit; text-align: left; }
+#tasks .task-info { gap: 4px; }
+#tasks .task-open { display: flex; flex-direction: column; width: 100%; height: 100%; min-width: 0; padding: 28px 0 0; background: transparent; color: inherit; text-align: left; }
 #tasks .task-open:hover { background: transparent; }
 #tasks .task-open:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 3px; border-radius: 4px; }
-#tasks .task-info strong { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 3; font-size: 18px; line-height: 1.25; color: var(--ink); overflow-wrap: anywhere; }
+#tasks .task-info strong { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 3; font-size: 21px; line-height: 1.15; color: var(--ink); overflow-wrap: anywhere; }
 #tasks .task-info p { margin: 0; color: var(--muted-ink); line-height: 1.45; }
-#tasks .task-info .task-description { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 3; color: var(--muted-ink); font-size: 13px; line-height: 1.35; white-space: pre-wrap; overflow-wrap: anywhere; }
-#tasks .task-info .task-suggestions { margin-top: auto; padding-top: 6px; color: var(--action); font-size: 12px; line-height: 1.3; font-weight: 700; }
-#tasks .completed .task-open::before { content: 'COMPLETED'; margin-bottom: 4px; color: var(--muted-ink); font-size: 10px; font-weight: 800; letter-spacing: .09em; }
+#tasks .task-info .task-description { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; color: var(--muted-ink); font-size: 16px; line-height: 1.25; white-space: pre-wrap; overflow-wrap: anywhere; }
+#tasks .task-info .task-suggestions { margin-top: auto; padding-top: 6px; color: var(--action); font-size: 15px; line-height: 1.2; font-weight: 700; }
+#tasks .completed .task-open::before { content: 'COMPLETED'; margin-bottom: 3px; color: var(--muted-ink); font-size: 13px; font-weight: 800; letter-spacing: .06em; }
 #tasks .completed .task-info strong { color: var(--ink); text-decoration: none; }
 #tasks .task-menu { position: absolute; top: 9px; right: 9px; margin: 0; }
 #tasks .task-menu summary { display: grid; place-items: center; width: 40px; height: 38px; border-radius: 9px; color: var(--action); font-size: 19px; letter-spacing: 2px; list-style: none; }
@@ -246,19 +254,19 @@ header p { font-size: 14px; margin-bottom: 6px; }
 #timer .page-heading { align-items: end; }
 #timer .timer-panel { padding: 18px 24px; }
 #timer .timer-setup { padding-bottom: 14px; border-bottom: 1px solid var(--secondary-blue); }
-#timer .timer-setup > label { margin: 0 0 5px; font-size: 14px; }
+#timer .timer-setup > label { margin: 0 0 5px; font-size: 17px; }
 #timer #focus-setup select, #timer #focus-setup input { padding: 7px 10px; }
-#timer #other-activity { margin: 7px 0 12px; font-size: 14px; }
+#timer #other-activity { margin: 7px 0 12px; font-size: 17px; }
 #timer #other-activity label { margin: 7px 0 4px; }
 #timer .timer-setup .focus-settings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 0; border: 0; }
-#timer .timer-setup .focus-settings label { margin: 0; font-size: 13px; }
+#timer .timer-setup .focus-settings label { margin: 0; font-size: 16px; }
 #timer .timer-setup .focus-settings input { margin-top: 3px; }
 #timer .timer-stage { padding: 12px 12px 14px; border: 1px solid var(--secondary-blue); border-radius: 18px; background: var(--paper); text-align: center; }
-#timer #focus-label { margin: 0; font-size: 18px; color: var(--muted-ink); }
-#timer #focus-clock { font-size: clamp(58px, 11vw, 86px); line-height: 1.12; padding: 0; margin: 5px 0; color: var(--ink); }
+#timer #focus-label { margin: 0; font-size: 21px; line-height: 1.25; color: var(--muted-ink); }
+#timer #focus-clock { font-size: clamp(66px, 11vw, 88px); letter-spacing: .035em; line-height: 1.12; padding: 0; margin: 5px 0; color: var(--ink); }
 #timer .focus-primary { display: flex; justify-content: center; margin: 5px 0 12px; }
-#timer .focus-primary button { min-width: 156px; font-size: 18px; font-weight: 700; }
-#timer .progress-label { display: block; margin: 0 0 4px; color: var(--muted-ink); font-size: 12px; font-weight: 600; }
+#timer .focus-primary button { min-width: 156px; font-size: 20px; font-weight: 700; }
+#timer .progress-label { display: block; margin: 0 0 4px; color: var(--muted-ink); font-size: 16px; font-weight: 600; }
 #timer #focus-progress { display: block; width: min(100%, 550px); height: 12px; margin: 0 auto 14px; overflow: hidden; border: 0; border-radius: 999px; accent-color: var(--action); }
 #timer #focus-progress::-webkit-progress-bar { background: var(--soft-surface); border-radius: 999px; }
 #timer #focus-progress::-webkit-progress-value { background: var(--action); border-radius: 999px; }
@@ -267,10 +275,10 @@ header p { font-size: 14px; margin-bottom: 6px; }
 #timer .focus-actions button:hover { background: var(--secondary-blue); color: var(--ink); }
 #timer .focus-actions #focus-stop { background: var(--soft-surface); color: var(--ink); border: 1px solid var(--secondary-blue); }
 #timer .focus-actions #focus-stop:hover { background: var(--secondary-blue); }
-#timer #focus-status { margin: 10px 0 0; font-size: 13px; color: var(--muted-ink); }
+#timer #focus-status { margin: 10px 0 0; font-size: 17px; color: var(--muted-ink); }
 #timer #focus-start-row { margin-top: 12px; }
 #timer #focus-start { min-width: 156px; font-weight: 700; }
-#timer #focus-message { min-height: 0; margin: 6px 0 0; text-align: center; font-size: 13px; }
+#timer #focus-message { min-height: 0; margin: 6px 0 0; text-align: center; font-size: 17px; }
 #timer #focus-message:empty { display: none; }
 #timer #break-clock { margin: 0 0 10px; font-size: 36px; font-variant-numeric: tabular-nums; color: var(--ink); }
 @media (max-width: 600px) {
@@ -281,16 +289,16 @@ header p { font-size: 14px; margin-bottom: 6px; }
 
 /* Stats: a real completion cue above the actual-time report, not percentages. */
 #stats .stats-heading { position: relative; display: block; padding: 12px 96px 8px; text-align: center; }
-#stats .stats-heading a { position: absolute; top: 12px; right: 4px; font-size: 14px; }
+#stats .stats-heading a { position: absolute; top: 12px; right: 4px; font-size: 17px; }
 #stats .stats-summary { display: flex; flex-direction: column; align-items: center; }
 #stats #stats-mark { display: grid; place-items: center; width: 56px; height: 56px; margin-bottom: 8px; border-radius: 50%; background: var(--paper); color: var(--action); font-size: 32px; font-weight: 700; }
 #stats #stats-mark[hidden] { display: none; }
 #stats .stats-heading h2 { margin: 2px 0; font-size: 32px; }
 #stats .stats-report { border-radius: 22px; padding: 22px 26px; }
 #stats .stats-report h3 { margin: 0 0 3px; font-size: 26px; }
-#stats .stats-report .footnote { margin: 0 0 14px; color: var(--muted-ink); }
+#stats .stats-report .footnote { margin: 0 0 14px; color: var(--muted-ink); font-size: 16px; line-height: 1.25; }
 #stats .report-filters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 400px; }
-#stats .report-filters button { padding: 9px 12px; border-radius: 10px; font-weight: 700; }
+#stats .report-filters button { padding: 9px 12px; border-radius: 10px; font-size: 19px; font-weight: 700; }
 #stats .report-filters button:hover { background: var(--action-hover); color: white; }
 #stats .report-summary { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 14px; margin: 14px 0 4px; }
 #stats #report-range, #stats #report-total { margin: 0; }
@@ -298,8 +306,8 @@ header p { font-size: 14px; margin-bottom: 6px; }
 #stats #report-bars { margin: 6px 0 0; }
 #stats #report-bars .report-row { padding: 10px 0; margin: 0; border: 0; border-bottom: 1px solid var(--secondary-blue); border-radius: 0; gap: 5px 16px; }
 #stats #report-bars .report-row:last-child { border-bottom: 0; }
-#stats .report-row span { min-width: 0; font-weight: 600; color: var(--ink); }
-#stats .report-row strong { color: var(--action); }
+#stats .report-row span { min-width: 0; font-size: 19px; line-height: 1.25; font-weight: 600; color: var(--ink); }
+#stats .report-row strong { color: var(--action); font-size: 19px; }
 #stats .report-bar { height: 16px; margin: 0; overflow: hidden; border-radius: 999px; --bar-colour: var(--secondary-blue); }
 #stats .report-bar.colour-blue { --bar-colour: var(--action); }
 #stats .report-bar.colour-peach { --bar-colour: #dfa688; }
@@ -313,7 +321,7 @@ header p { font-size: 14px; margin-bottom: 6px; }
 #stats #focus-history { margin: 0; }
 #stats #focus-history li:not(.empty) { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; padding: 10px 0; margin: 0; border: 0; border-bottom: 1px solid var(--secondary-blue); }
 #stats #focus-history li:last-child { border-bottom: 0; }
-#stats #focus-history li span { color: var(--muted-ink); font-size: 13px; }
+#stats #focus-history li span { color: var(--muted-ink); font-size: 16px; }
 @media (max-width: 600px) {
   #stats .stats-heading { padding: 10px 0; }
   #stats .stats-heading a { position: static; display: inline-block; margin-top: 8px; }
