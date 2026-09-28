@@ -27,3 +27,16 @@ test('vault settings live on the Obsidian page, not above Tasks', () => {
   assert.ok(tasks, 'Tasks page exists');
   assert.doesNotMatch(tasks, /vault-panel|vault-label|choose-vault|YOUR SPACE/);
 });
+
+test('Timer and Stats retain their headings without introductory descriptions', () => {
+  const timer = html.match(/<section class="page" id="timer"[\s\S]*?<\/section>/)?.[0];
+  const stats = html.match(/<section class="page" id="stats"[\s\S]*?<\/section>/)?.[0];
+  assert.ok(timer && stats);
+  assert.match(timer, /<h2>Timer<\/h2>/);
+  assert.match(timer, /id="focus-clock"/);
+  assert.doesNotMatch(timer, /Set your pace, then begin\./);
+  assert.match(stats, /id="stats-heading"/);
+  assert.match(stats, /id="report-bars"/);
+  assert.doesNotMatch(stats, /id="stats-subtitle"|See where your focus time went\./);
+  assert.doesNotMatch(renderer, /#stats-subtitle/);
+});
