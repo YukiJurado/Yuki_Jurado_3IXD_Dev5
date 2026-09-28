@@ -1,6 +1,8 @@
 const vaultLabel = document.querySelector('#vault-label');
 const pending = document.querySelector('#pending');
 const retry = document.querySelector('#retry');
+const vaultMessage = document.querySelector('#vault-message');
+const pendingCount = document.querySelector('#pending-count');
 const list = document.querySelector('#task-list');
 const message = document.querySelector('#message');
 const form = document.querySelector('#task-form');
@@ -35,7 +37,7 @@ for (const tab of document.querySelectorAll('#task-tabs [role="tab"]')) {
 }
 
 function showPage() {
-  const page = ['tasks', 'timer', 'stats'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'tasks';
+  const page = ['tasks', 'timer', 'stats', 'obsidian'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'tasks';
   for (const section of document.querySelectorAll('.page')) section.hidden = section.id !== page;
   for (const link of document.querySelectorAll('[data-page-link]')) {
     if (link.dataset.pageLink === page) link.setAttribute('aria-current', 'page');
@@ -125,7 +127,7 @@ function showEditor(item, task) {
     save.disabled = true;
     try {
       await window.focusDesk.editTask(task.id, title.value, colour.value, detailsFrom(description, focus, breakInput));
-      message.textContent = 'Changes saved locally. Check vault status for logging.';
+      message.textContent = 'Changes saved locally. See Obsidian for vault logging.';
       await refresh();
     } catch (error) {
       message.textContent = error.message;
@@ -173,12 +175,19 @@ reopenYes.addEventListener('click', async () => {
   }
 });
 
-async function refresh() {
-  const state = await window.focusDesk.getState();
+function renderVaultStatus(state) {
   vaultLabel.textContent = state.vaultPath || 'No vault selected. Select an existing Obsidian vault to begin.';
   const count = state.pendingEvents.length;
   pending.hidden = retry.hidden = count === 0;
-  pending.textContent = count ? `${count} event(s) pending: task saved locally, but vault logging failed. Restore the original vault and retry.` : '';
+  document.querySelector('#pending-empty').hidden = count !== 0;
+  pendingCount.hidden = count === 0;
+  pendingCount.textContent = count ? String(count) : '';
+  pending.textContent = count ? `${count} event(s) pending: saved locally, but vault logging failed. Restore the original vault and retry.` : '';
+}
+
+async function refresh() {
+  const state = await window.focusDesk.getState();
+  renderVaultStatus(state);
   document.querySelector('#add-task').disabled = !state.vaultPath;
   for (const tab of document.querySelectorAll('#task-tabs [role="tab"]')) {
     const selected = tab.dataset.taskStatus === taskFilter;
@@ -236,7 +245,7 @@ async function refresh() {
       actionButton('Delete', async () => {
         if (!window.confirm(`Delete “${task.title}”? The task will be removed, but its vault events will remain.`)) return null;
         await window.focusDesk.deleteTask(task.id);
-        return 'Task deleted locally. Check vault status for logging.';
+        return 'Task deleted locally. See Obsidian for vault logging.';
       })
     );
     menu.append(trigger, actions);
@@ -255,9 +264,9 @@ async function refresh() {
 document.querySelector('#choose-vault').addEventListener('click', async () => {
   try {
     await window.focusDesk.chooseVault();
-    message.textContent = '';
+    vaultMessage.textContent = '';
   } catch (error) {
-    message.textContent = error.message;
+    vaultMessage.textContent = error.message;
   }
   await refresh();
 });
@@ -272,7 +281,7 @@ form.addEventListener('submit', async event => {
     taskBreakCustomized = false;
     taskFilter = 'open';
     closeTaskForm();
-    message.textContent = 'Task saved locally. Check the vault status above for logging.';
+    message.textContent = 'Task saved locally. See Obsidian for vault logging.';
   } catch (error) {
     message.textContent = error.message;
   }
@@ -282,9 +291,9 @@ form.addEventListener('submit', async event => {
 retry.addEventListener('click', async () => {
   try {
     await window.focusDesk.retryPending();
-    message.textContent = 'Retry finished. Check the vault status above.';
+    vaultMessage.textContent = 'Retry finished. Check pending events above.';
   } catch (error) {
-    message.textContent = error.message;
+    vaultMessage.textContent = error.message;
   }
   await refresh();
 });
@@ -504,9 +513,7 @@ function renderFocus(state, updateTasks = false) {
     document.querySelector('#break-clock').textContent = formatClock(current.remainingMs - elapsed);
     document.querySelector('#break-resume').hidden = current.status !== 'paused';
   }
-  const count = state.pendingEvents.length;
-  pending.hidden = retry.hidden = count === 0;
-  pending.textContent = count ? `${count} event(s) pending: saved locally but vault logging failed. Restore the original vault and retry.` : '';
+  renderVaultStatus(state);
 }
 
 async function refreshFocus() {

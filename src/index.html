@@ -11,17 +11,26 @@
 </head>
 <body>
   <main>
-    <header><span class="eyebrow">A QUIETER WAY TO STUDY</span><h1>FocusDesk</h1><p>Plan what matters. Make room to focus.</p></header>
-    <nav class="section-nav" aria-label="App pages"><a href="#tasks" data-page-link="tasks">Tasks / Home</a><a href="#timer" data-page-link="timer">Timer</a><a href="#stats" data-page-link="stats">Stats</a></nav>
-    <section class="panel vault-panel" aria-label="Vault settings">
-      <h2>Obsidian vault</h2>
-      <p id="vault-label">Loading…</p>
-      <button id="choose-vault" type="button">Choose vault folder</button>
-      <div id="pending" role="status" hidden></div>
-      <button id="retry" type="button" hidden>Retry pending events</button>
+    <header class="top-bar">
+      <h1>FocusDesk</h1>
+      <nav class="section-nav" aria-label="App pages"><a href="#tasks" data-page-link="tasks">Tasks</a><a href="#timer" data-page-link="timer">Timer</a><a href="#stats" data-page-link="stats">Stats</a></nav>
+      <a class="vault-link" href="#obsidian" data-page-link="obsidian">Obsidian <span id="pending-count" hidden></span></a>
+    </header>
+    <section class="page" id="obsidian" aria-label="Obsidian settings page" hidden>
+      <div class="page-heading"><h2>Obsidian vault</h2></div>
+      <div class="panel vault-panel" aria-label="Vault settings">
+        <h3>Selected vault</h3>
+        <p id="vault-label">Loading…</p>
+        <button id="choose-vault" type="button">Choose vault folder</button>
+        <h3>Pending events</h3>
+        <p id="pending-empty">No pending events.</p>
+        <div id="pending" role="status" hidden></div>
+        <button id="retry" type="button" hidden>Retry pending events</button>
+        <p id="vault-message" role="status"></p>
+      </div>
     </section>
     <section class="page" id="tasks" aria-label="Tasks page">
-      <div class="page-heading task-heading"><div><span class="eyebrow">YOUR SPACE</span><h2>Task List</h2></div><button id="open-task-form" type="button" aria-label="Add a task" aria-controls="task-composer" aria-expanded="false">+</button></div>
+      <div class="page-heading task-heading"><h2>Task List</h2><button id="open-task-form" type="button" aria-label="Add a task" aria-controls="task-composer" aria-expanded="false">+</button></div>
       <div class="panel" id="task-composer" hidden><h3>Add a task</h3>
       <form id="task-form">
         <label for="task-title">Task title</label>
