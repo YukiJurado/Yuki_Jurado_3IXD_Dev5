@@ -83,6 +83,11 @@ header p, .page-heading p { color: #61778e; }
 #break-prompt h2 { font-size: 26px; margin: 0 0 10px; }
 .break-prompt-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
 #break-prompt-later { background: #e1edf7; color: #2f5f8a; }
+#task-reopen-prompt { width: min(430px, calc(100% - 32px)); border: 1px solid #9fc5e5; border-radius: 18px; padding: 28px; color: #203850; box-shadow: 0 18px 50px #173d6080; }
+#task-reopen-prompt::backdrop { background: #122c4680; }
+#task-reopen-prompt h2 { font-size: 24px; margin: 0 0 10px; }
+.task-reopen-actions { display: flex; gap: 10px; margin-top: 22px; }
+#task-reopen-no { background: #e1edf7; color: #2f5f8a; }
 .section-nav a:hover, .section-nav a:focus-visible { background: #c9dfef; outline-color: #316a9c; }
 .panel { border-color: #d8e5f0; box-shadow: 0 8px 26px #244f7610; margin: 16px 0; }
 .vault-panel { padding: 14px 20px; }

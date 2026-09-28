@@ -145,6 +145,34 @@ function openTaskInTimer(task) {
   location.hash = 'timer';
 }
 
+const reopenPrompt = document.querySelector('#task-reopen-prompt');
+const reopenYes = document.querySelector('#task-reopen-yes');
+let taskToReopen = null;
+function openTaskFromCard(task) {
+  if (task.status !== 'completed') return openTaskInTimer(task);
+  taskToReopen = task;
+  document.querySelector('#task-reopen-text').textContent = `“${task.title}” is completed.`;
+  reopenPrompt.showModal();
+}
+document.querySelector('#task-reopen-no').addEventListener('click', () => reopenPrompt.close());
+reopenPrompt.addEventListener('close', () => { taskToReopen = null; });
+reopenYes.addEventListener('click', async () => {
+  if (!taskToReopen || reopenYes.disabled) return;
+  reopenYes.disabled = true;
+  try {
+    const task = await window.focusDesk.reopenTask(taskToReopen.id);
+    taskFilter = 'open';
+    await refresh();
+    reopenPrompt.close();
+    openTaskInTimer(task);
+  } catch (error) {
+    message.textContent = error.message;
+    reopenPrompt.close();
+  } finally {
+    reopenYes.disabled = false;
+  }
+});
+
 async function refresh() {
   const state = await window.focusDesk.getState();
   vaultLabel.textContent = state.vaultPath || 'No vault selected. Select an existing Obsidian vault to begin.';
@@ -164,12 +192,12 @@ async function refresh() {
     item.dataset.taskId = task.id;
     item.className = `task-card colour-${task.colour || 'sage'}${task.status === 'completed' ? ' completed' : ''}`;
     item.addEventListener('click', event => {
-      if (!item.querySelector('.edit-form') && !event.target.closest('.task-menu')) openTaskInTimer(task);
+      if (!item.querySelector('.edit-form') && !event.target.closest('.task-menu')) openTaskFromCard(task);
     });
     const info = document.createElement('button');
     info.type = 'button';
     info.className = 'task-info task-open';
-    info.setAttribute('aria-label', `Focus on ${task.title}`);
+    info.setAttribute('aria-label', task.status === 'completed' ? `Make ${task.title} available again` : `Focus on ${task.title}`);
     const title = document.createElement('strong');
     title.textContent = task.title; // Never interpret a user's title as HTML.
     info.append(title);
