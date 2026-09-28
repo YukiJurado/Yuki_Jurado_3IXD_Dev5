@@ -205,18 +205,17 @@ header p { font-size: 17px; margin-bottom: 6px; }
 #task-composer #cancel-task-form:hover { background: var(--secondary-blue); }
 #tasks #message { margin: 0 4px 8px; min-height: 0; }
 #tasks #message:empty { display: none; }
-#tasks .group-tools { display: flex; justify-content: flex-end; margin: 0 0 7px; }
-#open-group-form { padding: 6px 13px; background: var(--primary-surface); color: var(--ink); }
-#open-group-form:hover { background: var(--secondary-blue); color: var(--ink); }
 #group-form { padding: 14px 18px; margin: 0 0 10px; }
 #group-form[hidden] { display: none; }
 #group-form label { margin: 0 0 6px; }
 #group-form #cancel-group-form { background: var(--primary-surface); color: var(--ink); }
-#group-filters { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 9px; }
+#group-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 9px; }
 #group-filters button { padding: 5px 12px; border: 1px solid var(--secondary-blue); border-radius: 999px; background: var(--soft-surface); color: var(--ink); font-size: 17px; line-height: 1.2; }
 #group-filters button:hover { background: var(--secondary-blue); color: var(--ink); }
 #group-filters button[aria-pressed="true"] { background: var(--action); border-color: var(--action); color: white; }
 #group-filters button[aria-pressed="true"]:hover { background: var(--action-hover); color: white; }
+#group-filters #open-group-form { display: grid; place-items: center; width: 40px; height: 40px; padding: 0 0 4px; background: var(--primary-surface); color: var(--ink); font-size: 26px; line-height: 1; }
+#group-filters #open-group-form:hover { background: var(--secondary-blue); color: var(--ink); }
 #task-tabs { display: flex; gap: 10px; margin: 6px 0 14px; }
 #task-tabs button { background: var(--primary-surface); color: var(--ink); border: 1px solid var(--secondary-blue); border-radius: 999px; padding: 8px 20px; font-weight: 700; }
 #task-tabs button:hover { background: var(--secondary-blue); color: var(--ink); }

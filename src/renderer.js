@@ -249,9 +249,9 @@ function renderGroupControls(groups) {
         refresh().catch(error => { message.textContent = error.message; });
       });
       return button;
-    }));
+    }), groupFormButton);
   }
-  for (const button of groupFilters.querySelectorAll('button')) {
+  for (const button of groupFilters.querySelectorAll('[data-group-filter]')) {
     button.setAttribute('aria-pressed', String(button.dataset.groupFilter === groupFilter));
   }
 }

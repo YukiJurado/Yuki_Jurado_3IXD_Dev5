@@ -47,7 +47,11 @@ test('Tasks offers a group form, an ungrouped task choice, and independent group
   for (const id of ['open-group-form', 'group-form', 'group-name', 'task-group', 'group-filters', 'task-tabs']) {
     assert.match(tasks, new RegExp(`id="${id}"`));
   }
-  assert.match(tasks, /Add a new group/);
+  const filters = tasks.match(/<div id="group-filters"[^>]*>([\s\S]*?)<\/div>/)?.[1];
+  assert.ok(filters, 'group filter row exists');
+  assert.match(filters, /data-group-filter="all"[\s\S]*id="open-group-form"/);
+  assert.match(filters, /id="open-group-form"[^>]*aria-label="Add group"[^>]*>\+<\/button>/);
+  assert.doesNotMatch(tasks, /Add a new group/);
   assert.match(tasks, /Add to a group/);
   assert.match(tasks, /<option value="">Ungrouped<\/option>/);
   assert.match(tasks, /data-group-filter="all"/);

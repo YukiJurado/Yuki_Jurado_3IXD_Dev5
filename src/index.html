@@ -46,12 +46,11 @@
       </form>
       </div>
       <p id="message" role="status"></p>
-      <div class="group-tools"><button id="open-group-form" type="button" aria-controls="group-form" aria-expanded="false">Add a new group</button></div>
       <form id="group-form" class="panel" hidden>
         <label for="group-name">Subject name</label>
         <div class="entry"><input id="group-name" maxlength="60" required><button type="submit">Save group</button><button id="cancel-group-form" type="button">Cancel</button></div>
       </form>
-      <div id="group-filters" role="group" aria-label="Task groups"><button type="button" data-group-filter="all" aria-pressed="true">All</button></div>
+      <div id="group-filters" role="group" aria-label="Task groups"><button type="button" data-group-filter="all" aria-pressed="true">All</button><button id="open-group-form" type="button" aria-label="Add group" title="Add group" aria-controls="group-form" aria-expanded="false">+</button></div>
       <div id="task-tabs" role="tablist" aria-label="Task status">
         <button id="tab-open" type="button" role="tab" data-task-status="open" aria-selected="true" aria-controls="task-list-panel">To Do</button>
         <button id="tab-completed" type="button" role="tab" data-task-status="completed" aria-selected="false" aria-controls="task-list-panel">Completed</button>
